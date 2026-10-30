@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Incidents')}"></head>
+<body>
+<header th:replace="~{layout :: header('incidents')}"></header>
+<main class="page">
+  <div class="page-head">
+    <div>
+      <h1>Incidents</h1>
+      <p class="sub">Problems detected by monitoring or reported by drivers. One open incident per trip and type; repeat detections update it.</p>
+    </div>
+  </div>
+  <th:block th:replace="~{layout :: flash}"></th:block>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Needs attention</h2><span class="small muted" th:text="${open.size()} + ' open'">0 open</span></div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Severity</th><th>Incident</th><th>Trip</th><th>Status</th><th>Owner</th><th>Detected</th><th>Seen</th></tr></thead>
+        <tbody>
+          <tr th:each="i : ${open}" th:attr="data-href=@{/incidents/{id}(id=${i.id})}">
+            <td><span th:replace="~{parts :: severity(${i.severity})}"></span><span class="tag tag-red" th:if="${i.escalated}" style="margin-left:4px">escalated</span></td>
+            <td><a th:href="@{/incidents/{id}(id=${i.id})}" th:text="${i.title}" style="font-weight:600">title</a>
+              <span class="sub" th:text="${i.code} + ' · ' + ${i.type.label()} + (${i.conditionCleared} ? ' · condition cleared' : '')">code</span></td>
+            <td><a th:if="${i.trip != null}" th:href="@{/trips/{id}(id=${i.trip.id})}" th:text="${i.trip.code}">TR</a></td>
+            <td><span th:replace="~{parts :: incidentStatus(${i.status})}"></span></td>
+            <td th:text="${i.ownerUsername ?: '—'}">owner</td>
+            <td class="num" th:text="${@fmt.ago(i.detectedAt)}">t</td>
+            <td class="num" th:text="${i.detectionCount} + '×'">1×</td>
+          </tr>
+          <tr th:if="${open.isEmpty()}"><td colspan="7"><div class="empty"><strong>All clear</strong>No open incidents. Try a disruption from the control tower to see one appear.</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>History</h2></div>
+    <form class="filters" method="get" action="/incidents">
+      <div class="field"><label for="i-status">Status</label><select id="i-status" name="status"><option value="">Any</option>
+        <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.label()}" th:selected="${s == status}"></option></select></div>
+      <div class="field"><label for="i-type">Type</label><select id="i-type" name="type"><option value="">Any</option>
+        <option th:each="t : ${types}" th:value="${t}" th:text="${t.label()}" th:selected="${t == type}"></option></select></div>
+      <div class="field"><label for="i-sev">Severity</label><select id="i-sev" name="severity"><option value="">Any</option>
+        <option th:each="s : ${severities}" th:value="${s}" th:text="${s.label()}" th:selected="${s == severity}"></option></select></div>
+      <button class="btn" type="submit">Apply</button>
+    </form>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Incident</th><th>Type</th><th>Severity</th><th>Status</th><th>Trip</th><th>Detected</th><th>Time to resolve</th><th>Resolution</th></tr></thead>
+        <tbody>
+          <tr th:each="i : ${page.content}" th:attr="data-href=@{/incidents/{id}(id=${i.id})}">
+            <td><a th:href="@{/incidents/{id}(id=${i.id})}" th:text="${i.code}">INC</a></td>
+            <td th:text="${i.type.label()}">type</td>
+            <td><span th:replace="~{parts :: severity(${i.severity})}"></span></td>
+            <td><span th:replace="~{parts :: incidentStatus(${i.status})}"></span></td>
+            <td><a th:if="${i.trip != null}" th:href="@{/trips/{id}(id=${i.trip.id})}" th:text="${i.trip.code}">TR</a></td>
+            <td class="num" th:text="${@fmt.dateTime(i.detectedAt)}">t</td>
+            <td class="num" th:text="${i.resolvedAt != null ? @fmt.between(i.detectedAt, i.resolvedAt) : '—'}">t</td>
+            <td class="small" th:text="${i.resolution ?: '—'}">r</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <nav th:replace="~{parts :: pager(${page}, '/incidents?' + (${status} != null ? 'status=' + ${status} + '&' : '') + (${type} != null ? 'type=' + ${type} + '&' : '') + (${severity} != null ? 'severity=' + ${severity} + '&' : ''))}"></nav>
+  </section>
+</main>
+<th:block th:replace="~{layout :: scripts}"></th:block>
+</body>
+</html>

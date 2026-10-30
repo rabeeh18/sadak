@@ -1,0 +1,63 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Departure Board — Fleet control tower mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#111;--mid:#767676;--line:#e6e6e6;--red:#eb0000}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1440px;height:900px;overflow:hidden;background:#fff;color:var(--ink);font:15px/1.4 "Schibsted Grotesk",sans-serif;display:grid;grid-template-columns:repeat(12,1fr);column-gap:24px;padding:0 48px}
+header{grid-column:1/-1;display:flex;align-items:center;gap:36px;height:72px;border-bottom:2px solid var(--ink)}
+.logo{display:flex;align-items:center;gap:12px;font-weight:800;font-size:18px}
+nav{display:flex;gap:28px;color:var(--mid);font-weight:500}nav b{color:var(--ink)}
+.right{margin-left:auto;display:flex;align-items:center;gap:16px;color:var(--mid)}
+.clock{grid-column:1/5;padding-top:36px}
+.clock .t{font-size:112px;font-weight:800;letter-spacing:-.04em;line-height:.9}
+.clock .d{color:var(--mid);margin-top:10px}
+.kpis{grid-column:5/-1;display:grid;grid-template-columns:repeat(4,1fr);column-gap:24px;padding-top:44px}
+.k{border-top:2px solid var(--ink);padding-top:10px}
+.k .n{font-size:44px;font-weight:700;line-height:1}.k .l{color:var(--mid);margin-top:6px}
+.k.alert{border-color:var(--red)}.k.alert .n{color:var(--red)}
+.board{grid-column:1/8;margin-top:40px}
+.board h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mid);display:grid;grid-template-columns:90px 110px 1fr 130px 90px;gap:16px;padding-bottom:8px;border-bottom:2px solid var(--ink)}
+.dep{display:grid;grid-template-columns:90px 110px 1fr 130px 90px;gap:16px;align-items:baseline;padding:14px 0;border-bottom:1px solid var(--line)}
+.dep .eta{font-size:28px;font-weight:700;letter-spacing:-.02em}
+.dep .trip{font-weight:700}.dep .trip small{display:block;font-weight:400;color:var(--mid);font-size:12px}
+.dep .to{font-size:20px;font-weight:500}.dep .to small{display:block;color:var(--mid);font-size:13px}
+.dep .delay{color:var(--red);font-weight:700}
+.dep .pf{font-weight:700;text-align:right}
+.dep.sel{background:#111;color:#fff;margin:0 -12px;padding:14px 12px}.dep.sel small{color:#bbb}.dep.sel .delay{color:#ff5a4f}
+.map{grid-column:8/-1;margin-top:40px;height:520px;background:#f3f3f3;position:relative}
+.map svg{position:absolute;inset:0}
+.note{position:absolute;left:20px;bottom:20px;right:20px;background:#fff;padding:14px 16px;border-left:0;font-size:14px}
+.note b{display:block;font-size:16px}
+</style></head><body>
+<header>
+  <div class="logo"><svg width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" fill="#eb0000"/><circle cx="9" cy="22" r="3.2" fill="#fff"/><circle cx="23" cy="10" r="3.2" fill="#fff"/><path d="M9 22 L9 15 Q9 10 14 10 L23 10" stroke="#fff" stroke-width="2.6" fill="none"/></svg>Fleet Ops</div>
+  <nav><b>Tower</b><span>Trips</span><span>Incidents</span><span>Planning</span><span>Fleet</span><span>Reports</span></nav>
+  <div class="right"><span>30× simulated</span><span>Simran Kaur</span></div>
+</header>
+<section class="clock"><div class="t">14:42</div><div class="d">Thursday 23 October · Punjab</div></section>
+<section class="kpis">
+  <div class="k"><div class="n">27</div><div class="l">On the road</div></div>
+  <div class="k"><div class="n">184</div><div class="l">Delivered today</div></div>
+  <div class="k alert"><div class="n">6</div><div class="l">At risk of being late</div></div>
+  <div class="k alert"><div class="n">3</div><div class="l">Open incidents</div></div>
+</section>
+<section class="board">
+  <h2><span>Next stop</span><span>Trip</span><span>Going to</span><span>Status</span><span style="text-align:right">Risk</span></h2>
+  <div class="dep sel"><span class="eta">15:21</span><span class="trip">TR-105<small>PB 08 DK 2290</small></span><span class="to">Moga<small>stop 3 of 6 · due 14:49</small></span><span class="delay">32 min late</span><span class="pf">82</span></div>
+  <div class="dep"><span class="eta">—</span><span class="trip">TR-106<small>PB 11 CF 0915</small></span><span class="to">Phagwara<small>stop 4 of 5</small></span><span class="delay">No signal 7 min</span><span class="pf">48</span></div>
+  <div class="dep"><span class="eta">14:58</span><span class="trip">TR-104<small>PB 10 GX 4471</small></span><span class="to">Khanna<small>stop 5 of 6</small></span><span>+5 min</span><span class="pf">12</span></div>
+  <div class="dep"><span class="eta">15:06</span><span class="trip">TR-109<small>PB 11 HB 5174</small></span><span class="to">Rajpura<small>stop 2 of 4</small></span><span>On time</span><span class="pf">0</span></div>
+  <div class="dep"><span class="eta">15:14</span><span class="trip">TR-111<small>PB 65 MZ 3021</small></span><span class="to">Kharar<small>stop 2 of 3</small></span><span>On time</span><span class="pf">0</span></div>
+</section>
+<section class="map"><svg viewBox="0 0 560 520" preserveAspectRatio="none">
+  <path d="M20 440 C140 380 220 330 300 300 S460 170 540 90" stroke="#d9d9d9" stroke-width="10" fill="none"/>
+  <path d="M300 300 C250 320 190 340 120 370" stroke="#111" stroke-width="5" fill="none" stroke-dasharray="1 9" stroke-linecap="round"/>
+  <path d="M300 300 L262 314" stroke="#eb0000" stroke-width="5"/>
+  <circle cx="262" cy="314" r="9" fill="#eb0000"/><rect x="292" y="292" width="16" height="16" fill="#111"/>
+  <circle cx="120" cy="370" r="7" fill="#fff" stroke="#111" stroke-width="3"/>
+  <g fill="#bbb"><circle cx="420" cy="200" r="6"/><circle cx="460" cy="380" r="6"/><circle cx="180" cy="160" r="6"/></g>
+  </svg>
+  <div class="note"><b>TR-105 · 82 risk</b>+40 projected late · +25 stop 18 min · +17 two deadlines due</div>
+</section>
+</body></html>

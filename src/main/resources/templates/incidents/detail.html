@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head(${incident.code})}"></head>
+<body>
+<header th:replace="~{layout :: header('incidents')}"></header>
+<main class="page">
+  <a class="back" href="/incidents"><svg class="icon"><use href="/img/icons.svg#i-arrow-left"></use></svg>All incidents</a>
+  <div class="page-head">
+    <div>
+      <h1 th:text="${incident.title}">Title</h1>
+      <p class="sub">
+        <th:block th:text="${incident.code} + ' · ' + ${incident.type.label()}">code</th:block>
+        <span th:replace="~{parts :: severity(${incident.severity})}"></span>
+        <span th:replace="~{parts :: incidentStatus(${incident.status})}"></span>
+        <span class="tag tag-red" th:if="${incident.escalated}">Escalated</span>
+        <span class="tag tag-green" th:if="${incident.conditionCleared and incident.status.isOpen()}">Condition no longer detected</span>
+      </p>
+    </div>
+    <div class="page-actions" th:if="${incident.status.name() == 'DETECTED'}">
+      <form method="post" th:action="@{/incidents/{id}/acknowledge(id=${incident.id})}">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <button class="btn btn-primary" type="submit"><svg class="icon"><use href="/img/icons.svg#i-hand"></use></svg>Acknowledge — I'll take it</button>
+      </form>
+    </div>
+  </div>
+  <th:block th:replace="~{layout :: flash}"></th:block>
+
+  <section class="legend-strip" style="--cols:4;margin-bottom:16px">
+    <div class="legend-cell"><span class="figure" th:text="${@fmt.time(incident.detectedAt)}">--</span><span class="label">Detected</span><span class="note" th:text="${@fmt.day(incident.detectedAt)}">day</span></div>
+    <div class="legend-cell"><span class="figure" th:text="${openFor}">--</span><span class="label" th:text="${incident.status.isOpen()} ? 'Open for' : 'Time to resolve'">Open for</span><span class="note" th:text="'seen ' + ${incident.detectionCount} + '× · last ' + ${@fmt.time(incident.lastDetectedAt)}">x</span></div>
+    <div class="legend-cell"><span class="figure" th:text="${incident.ownerUsername ?: '—'}" style="font-size:26px">owner</span><span class="label">Owner</span><span class="note" th:text="${incident.acknowledgedAt != null ? 'since ' + @fmt.time(incident.acknowledgedAt) : 'nobody yet'}">x</span></div>
+    <div class="legend-cell" th:if="${trip != null}"><span class="figure" style="font-size:26px"><a th:href="@{/trips/{id}(id=${trip.id})}" th:text="${trip.code}" style="color:inherit">TR</a></span>
+      <span class="label"><span class="plate" th:text="${trip.vehicle.registration}">PB</span></span><span class="note" th:text="${trip.driver.fullName} + ' · ' + ${trip.driver.phone}">driver</span></div>
+  </section>
+
+  <div class="grid-main-side">
+    <div>
+      <section class="panel" th:if="${incident.details != null or live != null}">
+        <div class="panel-head"><h2>What monitoring sees</h2></div>
+        <div class="panel-body">
+          <p th:if="${incident.details != null and live == null}" th:text="${incident.details}" style="white-space:pre-line">details</p>
+          <th:block th:if="${live != null}">
+            <ul class="reasons" th:if="${!live.reasons.isEmpty()}">
+              <li th:each="r : ${live.reasons}"><span class="pts" th:classappend="'band-' + ${live.riskBand}" th:text="'+' + ${r.points}">+0</span>
+                <span><span class="what" th:text="${r.label}">l</span><span class="why" th:text="${r.detail}">d</span></span></li>
+            </ul>
+            <p class="small muted" style="margin:8px 0 0" th:text="'Trip risk ' + ${live.riskScore} + ' (' + ${live.riskBand.toLowerCase()} + ') · ' + ${live.condition} + ' · square ' + ${live.grid} + ' · next stop ' + (${live.nextStop} ?: '—') + ' at ' + ${@fmt.time(live.nextEta)}">x</p>
+          </th:block>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Timeline</h2></div>
+        <ol class="timeline panel-body">
+          <li data-state="FAILED"><span class="node"></span>
+            <div class="t-head"><span>Detected</span><span class="small muted num" th:text="${@fmt.when(incident.detectedAt)}">t</span></div>
+            <div class="t-meta" th:text="${incident.type.label()} + ' · ' + ${incident.severity.label()}">x</div></li>
+          <li th:each="a : ${actions}" th:attr="data-state=${a.kind.name() == 'RESOLVED' ? 'COMPLETED' : 'ARRIVED'}"><span class="node"></span>
+            <div class="t-head"><span th:text="${a.kind.label()}">action</span><span class="small muted num" th:text="${@fmt.when(a.performedAt)}">t</span></div>
+            <div class="t-meta"><th:block th:text="${a.actor}">actor</th:block><th:block th:if="${a.note != null}" th:text="' — ' + ${a.note}">note</th:block></div></li>
+        </ol>
+      </section>
+    </div>
+
+    <aside th:if="${incident.status.isOpen()}">
+      <section class="panel">
+        <div class="panel-head"><h2>Record contact</h2></div>
+        <form class="panel-body" method="post" th:action="@{/incidents/{id}/contact(id=${incident.id})}">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <div class="field"><label for="c-note">What the driver said</label><textarea id="c-note" name="note" required placeholder="Stuck behind a tractor convoy near Ajitwal, moving again in 10 min"></textarea></div>
+          <button class="btn btn-sm" type="submit"><svg class="icon"><use href="/img/icons.svg#i-phone"></use></svg>Save</button>
+        </form>
+      </section>
+
+      <section class="panel" th:if="${trip != null and trip.status.isLive()}">
+        <div class="panel-head"><h2>Corrective action</h2></div>
+        <div class="panel-body">
+          <form method="post" th:action="@{/incidents/{id}/adjust-eta(id=${incident.id})}" class="field">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <label>Adjust ETA (minutes added to every remaining stop)</label>
+            <div class="btn-row"><input type="number" name="minutes" value="15" min="-120" max="600" style="width:90px">
+              <input name="note" placeholder="Reason" style="flex:1;width:auto"><button class="btn btn-sm" type="submit">Apply</button></div>
+          </form>
+          <form method="post" th:action="@{/incidents/{id}/recalculate(id=${incident.id})}" class="field" th:if="${trip.status.name() == 'IN_PROGRESS'}">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button class="btn btn-sm" type="submit"><svg class="icon"><use href="/img/icons.svg#i-route"></use></svg>Recalculate route from current position</button>
+          </form>
+          <form method="post" th:action="@{/incidents/{id}/fail-stop(id=${incident.id})}" class="field" th:if="${trip.status.name() == 'IN_PROGRESS'}">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <label>Mark a delivery failed</label>
+            <select name="stopId"><option th:each="s : ${trip.stops}" th:if="${!s.status.isDone() and s.kind.name() == 'DELIVERY'}" th:value="${s.id}" th:text="${s.seq} + '. ' + ${s.name}">stop</option></select>
+            <div class="btn-row" style="margin-top:6px"><select name="reason" style="flex:1;width:auto"><option>Recipient not available</option><option>Shop closed</option><option>Address not found</option><option>Refused by recipient</option><option>Access road blocked</option></select>
+              <button class="btn btn-sm btn-danger" type="submit">Mark failed</button></div>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel" th:if="${recommendation != null}">
+        <div class="panel-head"><h2>Reassign remaining stops</h2><span class="small muted" th:text="${recommendation.remainingWeightKg} + ' kg'">kg</span></div>
+        <div class="panel-body">
+          <p class="small muted" style="margin-top:0" th:if="${recommendation.candidates.isEmpty()}">No available vehicle with a free driver can take this load right now.</p>
+          <form th:each="c, it : ${recommendation.candidates}" th:if="${it.index < 3}" method="post" th:action="@{/incidents/{id}/reassign(id=${incident.id})}" class="candidate"
+                data-confirm="Move the remaining stops to this vehicle?">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input type="hidden" name="vehicleId" th:value="${c.vehicleId}">
+            <input type="hidden" name="driverId" th:value="${c.driverId}">
+            <div class="candidate-head"><span class="plate" th:text="${c.registration}">PB</span><strong th:text="${c.driverName}">d</strong><span class="grid-ref" th:text="${c.grid}">A1</span>
+              <span class="tag tag-blue" th:if="${it.index == 0}">best match</span></div>
+            <ul class="candidate-why"><li th:each="r : ${c.reasons}" th:text="${r}">r</li></ul>
+            <button class="btn btn-sm btn-blue" type="submit">Reassign to <th:block th:text="${c.registration}">PB</th:block></button>
+          </form>
+          <p class="small muted" th:if="${trip.vehicle.status.name() == 'BROKEN_DOWN'}" style="margin:8px 0 0">The new route goes to the breakdown site first to collect the cargo.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Close out</h2></div>
+        <div class="panel-body">
+          <form method="post" th:action="@{/incidents/{id}/resolve(id=${incident.id})}" class="field">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <label for="r-text">Resolution</label>
+            <textarea id="r-text" name="resolution" required placeholder="Remaining stops delivered by PB 10 GX 4471; customers informed"></textarea>
+            <button class="btn btn-sm btn-primary" type="submit" style="margin-top:6px"><svg class="icon"><use href="/img/icons.svg#i-check"></use></svg>Resolve</button>
+          </form>
+          <form method="post" th:action="@{/incidents/{id}/escalate(id=${incident.id})}" class="field" th:if="${!incident.escalated}">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <label for="e-note">Escalate to admins</label>
+            <div class="btn-row"><input id="e-note" name="note" placeholder="Why" style="flex:1;width:auto"><button class="btn btn-sm btn-danger" type="submit">Escalate</button></div>
+          </form>
+          <form method="post" th:action="@{/incidents/{id}/note(id=${incident.id})}">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <label for="n-text">Add a note</label>
+            <div class="btn-row"><input id="n-text" name="note" required style="flex:1;width:auto"><button class="btn btn-sm" type="submit">Add</button></div>
+          </form>
+        </div>
+      </section>
+    </aside>
+    <aside th:unless="${incident.status.isOpen()}">
+      <section class="panel"><div class="panel-head"><h2>Resolved</h2></div>
+        <div class="panel-body"><p th:text="${incident.resolution}">resolution</p>
+          <p class="small muted" th:text="${@fmt.dateTime(incident.resolvedAt)} + ' · ' + (${incident.ownerUsername} ?: 'system')">x</p></div></section>
+    </aside>
+  </div>
+</main>
+<th:block th:replace="~{layout :: scripts}"></th:block>
+</body>
+</html>

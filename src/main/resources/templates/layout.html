@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+  <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+  <title th:text="${title} + ' · Sadak'">Sadak</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Anek+Gurmukhi:wdth,wght@110,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+
+<th:block th:fragment="leafletCss">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="/css/map.css">
+</th:block>
+
+<svg th:fragment="icon(name)" class="icon" aria-hidden="true"><use th:href="'/img/icons.svg#i-' + ${name}"></use></svg>
+
+<svg th:fragment="spot" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0.8 9.4 9.2H0.6z" fill="currentColor"/></svg>
+
+<header th:fragment="header(active)" class="topbar">
+  <a class="brand" href="/tower" aria-label="Sadak home">
+    <span class="mark-p4" style="--s:28px" lang="pa" aria-hidden="true">ਸ<span>ੜ</span>ਕ</span>
+    <span><span class="sheet-title">Sadak</span><span class="brand-sub">Punjab · demo data</span></span>
+  </a>
+  <nav aria-label="Main">
+    <ul class="nav">
+      <li><a href="/tower" th:attr="aria-current=${active == 'tower'} ? 'page' : null"><svg class="icon"><use href="/img/icons.svg#i-map"></use></svg>Control tower</a></li>
+      <li><a href="/trips" th:attr="aria-current=${active == 'trips'} ? 'page' : null"><svg class="icon"><use href="/img/icons.svg#i-route"></use></svg>Trips</a></li>
+      <li><a href="/incidents" th:attr="aria-current=${active == 'incidents'} ? 'page' : null"><svg class="icon"><use href="/img/icons.svg#i-triangle-alert"></use></svg>Incidents <span class="count" data-incident-count th:text="${openIncidentCount > 0 ? openIncidentCount : ''}"></span></a></li>
+      <li><a href="/planning" th:attr="aria-current=${active == 'planning'} ? 'page' : null"><svg class="icon"><use href="/img/icons.svg#i-calendar-clock"></use></svg>Planning</a></li>
+      <li><a href="/shipments" th:attr="aria-current=${active == 'shipments'} ? 'page' : null"><svg class="icon"><use href="/img/icons.svg#i-package"></use></svg>Shipments</a></li>
+      <li><a href="/fleet/vehicles" th:attr="aria-current=${active == 'fleet'} ? 'page' : null"><svg class="icon"><use href="/img/icons.svg#i-truck"></use></svg>Fleet</a></li>
+      <li><a href="/analytics" th:attr="aria-current=${active == 'analytics'} ? 'page' : null"><svg class="icon"><use href="/img/icons.svg#i-chart-column"></use></svg>Analytics</a></li>
+      <li th:if="${me.admin}"><a href="/admin/settings" th:attr="aria-current=${active == 'admin'} ? 'page' : null"><svg class="icon"><use href="/img/icons.svg#i-settings"></use></svg>Admin</a></li>
+    </ul>
+  </nav>
+  <div class="topbar-right">
+    <div class="simclock" data-simclock th:attr="data-now=${clockState.now},data-speed=${clockState.speed},data-paused=${clockState.paused ? '' : null}">
+      <span class="figure simclock-time" data-clock-time>--:--</span>
+      <span class="simclock-date"><span data-clock-date>&nbsp;</span><br>IST · simulated</span>
+      <select data-clock-speed aria-label="Simulation speed">
+        <option value="1">1×</option>
+        <option value="10">10×</option>
+        <option value="30">30×</option>
+        <option value="60">60×</option>
+        <option value="120">120×</option>
+      </select>
+      <button type="button" class="iconbtn" data-clock-toggle aria-label="Pause simulation">
+        <svg class="icon" data-icon-pause><use href="/img/icons.svg#i-pause"></use></svg>
+        <svg class="icon" data-icon-play hidden><use href="/img/icons.svg#i-play"></use></svg>
+      </button>
+    </div>
+    <div style="position:relative">
+      <button type="button" class="iconbtn" data-notes-toggle aria-label="Notifications" aria-expanded="false">
+        <svg class="icon icon-lg"><use href="/img/icons.svg#i-bell"></use></svg><span class="dot" data-notes-count></span>
+      </button>
+      <div class="popover" data-notes-panel hidden>
+        <div class="panel-head"><h2>Notifications</h2><button type="button" class="btn btn-sm btn-quiet" data-notes-read>Mark all read</button></div>
+        <div data-notes-list><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+    <div class="usermenu">
+      <span><span class="usermenu-name" th:text="${me.name}">Name</span><span class="usermenu-role" th:text="${me.role}">Role</span></span>
+      <form method="post" action="/logout">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <button class="iconbtn" type="submit" aria-label="Sign out" title="Sign out"><svg class="icon"><use href="/img/icons.svg#i-log-out"></use></svg></button>
+      </form>
+    </div>
+  </div>
+</header>
+
+<th:block th:fragment="flash">
+  <div class="flash flash-error" role="alert" th:if="${error}"><svg class="icon"><use href="/img/icons.svg#i-circle-x"></use></svg><span th:text="${error}">Error</span></div>
+  <div class="flash flash-ok" role="status" th:if="${ok}"><svg class="icon"><use href="/img/icons.svg#i-circle-check"></use></svg><span th:text="${ok}">Done</span></div>
+</th:block>
+
+<th:block th:fragment="scripts">
+  <div class="toast-stack" data-toasts aria-live="polite"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+  <script src="/js/common.js"></script>
+</th:block>
+
+<th:block th:fragment="leafletJs">
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/js/sheetmap.js"></script>
+</th:block>
+
+</body>
+</html>

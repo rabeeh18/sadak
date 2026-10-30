@@ -1,0 +1,65 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Specimen — Fleet control tower mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,300..800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--g:#f7f7f5;--ink:#0d0d0d;--mid:#7c7c78;--line:#dededa;--hot:#ff4f00}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1440px;height:900px;overflow:hidden;background:var(--g);color:var(--ink);font:13px/1.5 "JetBrains Mono",monospace;display:grid;grid-template-columns:420px 1fr;grid-template-rows:56px 1fr}
+header{grid-column:1/-1;display:flex;align-items:center;gap:32px;padding:0 32px;border-bottom:1px solid var(--line)}
+.logo{font:800 20px "Bricolage Grotesque";font-variation-settings:"wdth" 75;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+nav{display:flex;gap:24px;color:var(--mid)}nav b{color:var(--ink);font-weight:600}
+.right{margin-left:auto;color:var(--mid)}.right b{color:var(--ink)}
+aside{border-right:1px solid var(--line);padding:24px 32px;overflow:hidden}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:18px 24px;padding-bottom:22px;border-bottom:1px solid var(--line)}
+.sum .n{font:600 34px "Bricolage Grotesque";line-height:1}.sum .l{color:var(--mid)}
+.sum .hot{color:var(--hot)}
+.tl{margin-top:16px}
+.tr{display:grid;grid-template-columns:62px 1fr 52px;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.tr.sel{color:var(--hot)}.tr.sel b{color:var(--hot)}
+.tr span{color:var(--mid)}.tr .r{text-align:right}
+main{position:relative;padding:40px 56px;overflow:hidden}
+.kicker{color:var(--mid)}
+.big{font:800 360px/.82 "Bricolage Grotesque";font-variation-settings:"wdth" 75,"opsz" 96;letter-spacing:-.05em;color:var(--hot);margin-top:18px}
+.big small{font-size:72px;letter-spacing:-.02em;margin-left:10px;color:var(--ink)}
+.what{font:500 30px/1.2 "Bricolage Grotesque";max-width:760px;margin-top:22px}
+.why{display:flex;gap:40px;margin-top:28px;padding-top:16px;border-top:1px solid var(--ink)}
+.why b{display:block;font:600 22px "Bricolage Grotesque"}
+.inset{position:absolute;right:56px;top:40px;width:330px;height:240px;background:#ececea}
+.inset svg{width:100%;height:100%}
+.act{display:flex;gap:10px;margin-top:30px}
+.act span{border:1px solid var(--ink);padding:8px 14px}.act span:first-child{background:var(--ink);color:var(--g)}
+</style></head><body>
+<header>
+  <div class="logo"><svg width="22" height="22" viewBox="0 0 22 22"><path d="M2 20 L11 2 L20 20" stroke="#0d0d0d" stroke-width="3" fill="none"/><circle cx="11" cy="14" r="2.6" fill="#ff4f00"/></svg>fleet/ops</div>
+  <nav><b>tower</b><span>trips</span><span>incidents·3</span><span>plan</span><span>fleet</span><span>reports</span></nav>
+  <div class="right"><b>14:42:07</b> · 30× · simran.kaur</div>
+</header>
+<aside>
+  <div class="sum">
+    <div><div class="n">27</div><div class="l">on the road</div></div>
+    <div><div class="n">184</div><div class="l">delivered</div></div>
+    <div><div class="n hot">6</div><div class="l">parcels at risk</div></div>
+    <div><div class="n">3</div><div class="l">open incidents</div></div>
+  </div>
+  <div class="tl">
+    <div class="tr sel"><b>TR-105</b><span style="color:inherit">moga · 3/6</span><span class="r">+32</span></div>
+    <div class="tr"><b>TR-106</b><span>phagwara · signal lost</span><span class="r">?</span></div>
+    <div class="tr"><b>TR-104</b><span>khanna · 5/6</span><span class="r">+5</span></div>
+    <div class="tr"><b>TR-109</b><span>rajpura · 2/4</span><span class="r">−3</span></div>
+    <div class="tr"><b>TR-111</b><span>kharar · 2/3</span><span class="r">0</span></div>
+    <div class="tr"><b>TR-112</b><span>batala · 1/4</span><span class="r">0</span></div>
+    <div class="tr"><b>TR-113</b><span>mansa · 0/3</span><span class="r">+2</span></div>
+    <div class="tr"><b>TR-114</b><span>ropar · 3/5</span><span class="r">−1</span></div>
+    <div class="tr"><b>TR-115</b><span>nabha · 1/2</span><span class="r">0</span></div>
+    <div class="tr"><b>TR-116</b><span>jagraon · 2/5</span><span class="r">+1</span></div>
+  </div>
+</aside>
+<main>
+  <div class="kicker">TR-105 · PB 08 DK 2290 · Gurpreet Singh · Ludhiana → Moga</div>
+  <div class="big">+32<small>min</small></div>
+  <div class="what">Two Moga deliveries will miss their 14:49 deadline at the current pace.</div>
+  <div class="why"><div><b>+40</b>projected late</div><div><b>+25</b>stopped 18 min at Sidhwan</div><div><b>+17</b>two deadlines</div><div><b style="color:var(--hot)">82</b>risk, critical</div></div>
+  <div class="act"><span>Acknowledge</span><span>Call driver</span><span>Reassign</span><span>Adjust ETA</span></div>
+  <div class="inset"><svg viewBox="0 0 330 240"><path d="M300 60 C220 90 160 130 110 160 S50 200 20 210" stroke="#cfcfcb" stroke-width="10" fill="none"/><path d="M300 60 C260 75 230 90 200 105" stroke="#0d0d0d" stroke-width="4" fill="none"/><path d="M200 105 C160 130 120 155 60 190" stroke="#ff4f00" stroke-width="3" fill="none" stroke-dasharray="4 5"/><circle cx="200" cy="105" r="7" fill="#ff4f00"/><circle cx="60" cy="190" r="6" fill="#f7f7f5" stroke="#0d0d0d" stroke-width="2.5"/></svg></div>
+</main>
+</body></html>

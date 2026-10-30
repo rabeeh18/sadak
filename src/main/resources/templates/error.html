@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${status} + ' · Sadak'">Error · Sadak</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<main class="login">
+  <section class="login-sheet">
+    <p class="caps" th:text="'Error ' + ${status}">Error</p>
+    <h1 style="font-size:24px;margin:6px 0 10px" th:switch="${status}">
+      <th:block th:case="404">This page is off the map.</th:block>
+      <th:block th:case="403">You don't have access to this.</th:block>
+      <th:block th:case="*">Something went wrong on our side.</th:block>
+    </h1>
+    <p class="muted" th:switch="${status}">
+      <th:block th:case="404">The link may be old, or the record was removed.</th:block>
+      <th:block th:case="403">Sign in with an account that has the right role, or ask an admin.</th:block>
+      <th:block th:case="*">The error has been logged. Go back and try again.</th:block>
+    </p>
+    <div class="btn-row" style="margin-top:16px"><a class="btn btn-primary" href="/">Go to the start</a><a class="btn" href="/login">Sign in</a></div>
+  </section>
+</main>
+</body>
+</html>

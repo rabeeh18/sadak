@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head(${v.registration})}"></head>
+<body>
+<header th:replace="~{layout :: header('fleet')}"></header>
+<main class="page">
+  <a class="back" href="/fleet/vehicles"><svg class="icon"><use href="/img/icons.svg#i-arrow-left"></use></svg>Fleet</a>
+  <div class="page-head">
+    <div><h1><span class="plate" style="font-size:22px" th:text="${v.registration}">PB</span> <span th:replace="~{parts :: vehicleStatus(${v.status})}"></span></h1>
+      <p class="sub" th:text="${v.type} + ' · ' + ${v.capacityKg} + ' kg · based at ' + ${v.homeWarehouse.name}">x</p></div>
+    <div class="page-actions">
+      <a class="btn" th:if="${liveTrip != null}" th:href="@{/trips/{id}(id=${liveTrip.id})}" th:text="'On ' + ${liveTrip.code}">trip</a>
+      <form th:if="${v.status.name() == 'BROKEN_DOWN' or v.status.name() == 'MAINTENANCE'}" method="post" th:action="@{/fleet/vehicles/{id}/return(id=${v.id})}">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <button class="btn btn-primary" type="submit"><svg class="icon"><use href="/img/icons.svg#i-check"></use></svg>Return to service</button>
+      </form>
+    </div>
+  </div>
+  <th:block th:replace="~{layout :: flash}"></th:block>
+  <section class="legend-strip" style="--cols:4;margin-bottom:16px">
+    <div class="legend-cell"><span class="figure" th:text="${trips.size()}">0</span><span class="label">Trips, last 60 days</span></div>
+    <div class="legend-cell"><span class="figure" th:text="${downtime30}" style="font-size:28px">0</span><span class="label">Downtime, last 30 days</span></div>
+    <div class="legend-cell"><span class="figure grid-ref" th:text="${@fmt.grid(v.lastLat, v.lastLng)}">A1</span><span class="label">Last known square</span><span class="note" th:text="${@fmt.ago(v.lastSeenAt)}">t</span></div>
+    <div class="legend-cell"><span class="figure" th:text="${records.size()}">0</span><span class="label">Workshop visits</span></div>
+  </section>
+  <div class="grid-main-side">
+    <div>
+      <section class="panel"><div class="panel-head"><h2>Recent trips</h2></div><div class="table-wrap"><table th:replace="~{parts :: tripTable(${trips})}"></table></div></section>
+      <section class="panel"><div class="panel-head"><h2>Workshop log</h2></div>
+        <table class="data"><thead><tr><th>Kind</th><th>Reason</th><th>From</th><th>To</th><th>Duration</th></tr></thead><tbody>
+          <tr th:each="r : ${records}"><td th:text="${@fmt.humanize(r.kind.name())}">k</td><td th:text="${r.reason}">r</td>
+            <td class="num" th:text="${@fmt.dateTime(r.startedAt)}">t</td><td class="num" th:text="${r.endedAt != null ? @fmt.dateTime(r.endedAt) : 'open'}">t</td>
+            <td class="num" th:text="${r.endedAt != null ? @fmt.between(r.startedAt, r.endedAt) : '—'}">d</td></tr>
+          <tr th:if="${records.isEmpty()}"><td colspan="5" class="empty">No workshop visits recorded.</td></tr>
+        </tbody></table></section>
+      <section class="panel"><div class="panel-head"><h2>Changes</h2></div><table th:replace="~{parts :: changeTable(${changes})}"></table></section>
+    </div>
+    <aside>
+      <section class="panel" th:if="${v.status.name() == 'AVAILABLE'}">
+        <div class="panel-head"><h2>Take off the road</h2></div>
+        <form class="panel-body" method="post" th:action="@{/fleet/vehicles/{id}/workshop(id=${v.id})}">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <div class="field"><label for="kind">Why</label><select id="kind" name="kind"><option value="SCHEDULED">Scheduled service</option><option value="INSPECTION">Inspection</option><option value="BREAKDOWN">Breakdown</option></select></div>
+          <div class="field"><label for="reason">Details</label><input id="reason" name="reason" required placeholder="10,000 km service"></div>
+          <button class="btn btn-danger" type="submit">Mark unavailable</button>
+        </form>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h2>Edit</h2></div>
+        <form class="panel-body" method="post" th:action="@{/fleet/vehicles/{id}(id=${v.id})}">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <div class="field"><label for="type">Type</label><input id="type" name="type" th:value="${v.type}" required></div>
+          <div class="field"><label for="cap">Capacity (kg)</label><input id="cap" name="capacityKg" type="number" th:value="${v.capacityKg}" min="100" required></div>
+          <div class="field"><label for="wh">Home warehouse</label><select id="wh" name="warehouseId"><option th:each="w : ${warehouses}" th:value="${w.id}" th:text="${w.name}" th:selected="${w.id == v.homeWarehouse.id}">w</option></select></div>
+          <label class="check field"><input type="checkbox" name="simulated" value="true" th:checked="${v.simulated}"> Position comes from the simulator</label>
+          <button class="btn" type="submit">Save</button>
+        </form>
+      </section>
+    </aside>
+  </div>
+</main>
+<th:block th:replace="~{layout :: scripts}"></th:block>
+</body>
+</html>

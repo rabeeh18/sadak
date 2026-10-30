@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Drivers')}"></head>
+<body>
+<header th:replace="~{layout :: header('fleet')}"></header>
+<main class="page">
+  <div class="page-head"><div><h1>Fleet</h1><p class="sub" th:text="${drivers.size()} + ' drivers'">x</p></div></div>
+  <nav th:replace="~{parts :: fleetTabs(${tab})}"></nav>
+  <th:block th:replace="~{layout :: flash}"></th:block>
+  <div class="grid-main-side">
+    <section class="panel">
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Driver</th><th>Phone</th><th>Base</th><th>Status</th><th>Licence</th><th>Valid to</th><th>App login</th></tr></thead>
+          <tbody>
+            <tr th:each="d : ${drivers}" th:attr="data-href=@{/fleet/drivers/{id}(id=${d.id})}">
+              <td><a th:href="@{/fleet/drivers/{id}(id=${d.id})}" th:text="${d.fullName}" style="font-weight:600">name</a></td>
+              <td class="num" th:text="${d.phone}">p</td>
+              <td th:text="${d.homeWarehouse.code}">wh</td>
+              <td><span class="tag" th:classappend="${d.status.name() == 'AVAILABLE'} ? 'tag-green' : (${d.status.name() == 'ON_TRIP'} ? 'tag-blue' : 'tag-ink')" th:text="${d.status.label()}">s</span></td>
+              <td class="num small" th:text="${d.licenseNumber}">l</td>
+              <td>
+                <span th:if="${!d.licenseValidOn(today)}" class="tag tag-red" th:text="'Expired ' + ${@fmt.shortDay(d.licenseExpiry)}">expired</span>
+                <span th:if="${d.licenseValidOn(today) and d.licenseExpiry.isBefore(soon)}" class="tag tag-orange" th:text="'Expires ' + ${@fmt.shortDay(d.licenseExpiry)}">soon</span>
+                <span th:if="${!d.licenseExpiry.isBefore(soon)}" class="num" th:text="${d.licenseExpiry}">date</span>
+              </td>
+              <td class="small muted" th:text="${d.user != null ? d.user.username : '—'}">u</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <aside>
+      <section class="panel">
+        <div class="panel-head"><h2>Add a driver</h2></div>
+        <form class="panel-body" method="post" action="/fleet/drivers">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <div class="field"><label for="fn">Full name</label><input id="fn" name="fullName" required></div>
+          <div class="field"><label for="ph">Phone</label><input id="ph" name="phone" type="tel" required placeholder="+91 98…"></div>
+          <div class="field"><label for="lic">Licence number</label><input id="lic" name="licenseNumber" required></div>
+          <div class="field"><label for="exp">Licence valid to</label><input id="exp" name="licenseExpiry" type="date" required></div>
+          <div class="field"><label for="wh">Home warehouse</label><select id="wh" name="warehouseId"><option th:each="w : ${warehouses}" th:value="${w.id}" th:text="${w.name}">w</option></select></div>
+          <button class="btn btn-primary" type="submit">Add driver</button>
+        </form>
+      </section>
+    </aside>
+  </div>
+</main>
+<th:block th:replace="~{layout :: scripts}"></th:block>
+</body>
+</html>

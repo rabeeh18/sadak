@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<span th:fragment="spot(score, band)" class="spot" th:classappend="'band-' + ${band}" th:title="'Risk ' + ${score}">
+  <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .8 9.4 9.2H.6z" fill="currentColor"/></svg><th:block th:text="${score}">0</th:block>
+</span>
+
+<span th:fragment="tripStatus(status)" class="tag"
+      th:classappend="${status.name() == 'IN_PROGRESS'} ? 'tag-blue' : (${status.name() == 'COMPLETED'} ? 'tag-green' : (${status.name() == 'CANCELLED'} ? 'tag-ink' : 'tag-ochre'))"
+      th:text="${status.label()}">Status</span>
+
+<span th:fragment="severity(sev)" class="tag"
+      th:classappend="${sev.name() == 'CRITICAL'} ? 'tag-solid-red' : (${sev.name() == 'HIGH'} ? 'tag-orange' : (${sev.name() == 'MEDIUM'} ? 'tag-ochre' : 'tag-ink'))"
+      th:text="${sev.label()}">Severity</span>
+
+<span th:fragment="incidentStatus(st)" class="tag"
+      th:classappend="${st.name() == 'RESOLVED'} ? 'tag-green' : (${st.name() == 'DETECTED'} ? 'tag-red' : 'tag-blue')"
+      th:text="${st.label()}">Status</span>
+
+<span th:fragment="shipmentStatus(st)" class="tag"
+      th:classappend="${st.name() == 'DELIVERED'} ? 'tag-green' : (${st.name() == 'FAILED'} ? 'tag-red' : (${st.name() == 'OUT_FOR_DELIVERY'} ? 'tag-blue' : (${st.name() == 'CANCELLED'} ? 'tag-ink' : 'tag-ochre')))"
+      th:text="${st.label()}">Status</span>
+
+<span th:fragment="vehicleStatus(st)" class="tag"
+      th:classappend="${st.name() == 'AVAILABLE'} ? 'tag-green' : (${st.name() == 'ON_TRIP'} ? 'tag-blue' : (${st.name() == 'BROKEN_DOWN'} ? 'tag-red' : 'tag-ochre'))"
+      th:text="${st.label()}">Status</span>
+
+<nav th:fragment="fleetTabs(tab)" class="tabs" style="margin-bottom:16px" aria-label="Fleet sections">
+  <a href="/fleet/vehicles" th:attr="aria-current=${tab == 'vehicles'} ? 'page' : null">Vehicles</a>
+  <a href="/fleet/drivers" th:attr="aria-current=${tab == 'drivers'} ? 'page' : null">Drivers</a>
+  <a href="/fleet/warehouses" th:attr="aria-current=${tab == 'warehouses'} ? 'page' : null">Warehouses</a>
+  <a href="/fleet/maintenance" th:attr="aria-current=${tab == 'maintenance'} ? 'page' : null">Workshop log</a>
+</nav>
+
+<nav th:fragment="adminTabs(tab)" class="tabs" style="margin-bottom:16px" aria-label="Admin sections">
+  <a href="/admin/settings" th:attr="aria-current=${tab == 'settings'} ? 'page' : null">Risk rules &amp; settings</a>
+  <a href="/admin/users" th:attr="aria-current=${tab == 'users'} ? 'page' : null">Users</a>
+  <a href="/admin/audit" th:attr="aria-current=${tab == 'audit'} ? 'page' : null">Audit log</a>
+</nav>
+
+<table th:fragment="tripTable(trips)" class="data">
+  <thead><tr><th>Trip</th><th>Status</th><th>Planned</th><th class="r">Stops</th><th>Risk</th></tr></thead>
+  <tbody>
+    <tr th:each="t : ${trips}" th:attr="data-href=@{/trips/{id}(id=${t.id})}">
+      <td><a th:href="@{/trips/{id}(id=${t.id})}" th:text="${t.code}">TR</a></td>
+      <td><span th:replace="~{parts :: tripStatus(${t.status})}"></span></td>
+      <td class="num" th:text="${@fmt.when(t.plannedStart)}">t</td>
+      <td class="r num" th:text="${t.stops.size()}">0</td>
+      <td><span th:replace="~{parts :: spot(${t.riskScore}, ${t.riskBand.name()})}"></span></td>
+    </tr>
+    <tr th:if="${trips.isEmpty()}"><td colspan="5" class="empty">No trips in the last 60 days.</td></tr>
+  </tbody>
+</table>
+
+<table th:fragment="changeTable(changes)" class="data">
+  <tbody>
+    <tr th:each="c : ${changes}"><td class="num nowrap" th:text="${@fmt.when(c.occurredAt)}">t</td><td th:text="${c.summary}">s</td><td th:text="${c.actor}">a</td></tr>
+    <tr th:if="${changes.isEmpty()}"><td class="empty">No recorded changes.</td></tr>
+  </tbody>
+</table>
+
+<nav th:fragment="pager(page, base)" class="pager" th:if="${page.totalPages > 1}">
+  <span th:text="|Page ${page.number + 1} of ${page.totalPages} · ${page.totalElements} rows|">Page</span>
+  <span class="btn-row">
+    <a class="btn btn-sm btn-quiet" th:if="${page.hasPrevious()}" th:href="${base} + 'page=' + ${page.number - 1}">Previous</a>
+    <a class="btn btn-sm btn-quiet" th:if="${page.hasNext()}" th:href="${base} + 'page=' + ${page.number + 1}">Next</a>
+  </span>
+</nav>
+
+</body>
+</html>

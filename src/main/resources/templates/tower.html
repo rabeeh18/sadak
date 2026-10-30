@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <th:block th:replace="~{layout :: head('Control tower')}"></th:block>
+  <th:block th:replace="~{layout :: leafletCss}"></th:block>
+  <link rel="stylesheet" href="/css/tower.css">
+</head>
+<body class="tower-body">
+<header th:replace="~{layout :: header('tower')}"></header>
+
+<main class="tower" data-tower>
+  <section class="legend-strip tower-kpis" aria-label="Operation today">
+    <div class="legend-cell">
+      <span class="figure" data-kpi="activeTrips" th:text="${kpi.activeTrips}">0</span>
+      <span class="label">Trips on the road</span>
+      <span class="note"><span data-kpi="plannedTrips" th:text="${kpi.plannedTrips}">0</span> planned to depart</span>
+    </div>
+    <div class="legend-cell">
+      <span class="figure" data-kpi="deliveredToday" th:text="${kpi.deliveredToday}">0</span>
+      <span class="label">Delivered today</span>
+      <span class="note" data-kpi-note="onTime" th:text="${kpi.onTimeToday != null ? kpi.onTimeToday + '% on time' : 'No deliveries yet'}">—</span>
+    </div>
+    <div class="legend-cell" data-tone-for="atRisk">
+      <span class="figure" data-kpi="atRisk" th:text="${kpi.atRisk}">0</span>
+      <span class="label">Shipments at SLA risk</span>
+      <span class="note">projected late or within margin</span>
+    </div>
+    <div class="legend-cell" data-tone-for="openIncidents">
+      <span class="figure" data-kpi="openIncidents" th:text="${kpi.openIncidents}">0</span>
+      <span class="label">Open incidents</span>
+      <span class="note"><span data-kpi="criticalIncidents" th:text="${kpi.criticalIncidents}">0</span> critical</span>
+    </div>
+    <div class="legend-cell">
+      <span class="figure"><span data-kpi="idleVehicles" th:text="${kpi.idleVehicles}">0</span><span class="figure-sep">/</span><span data-kpi="unavailableVehicles" th:text="${kpi.unavailableVehicles}">0</span></span>
+      <span class="label">Vehicles idle / off road</span>
+      <span class="note">of <span data-kpi="vehiclesInService" th:text="${kpi.vehiclesInService}">0</span> in service</span>
+    </div>
+    <div class="legend-cell">
+      <span class="figure"><span data-kpi="avgDelayMin" th:text="${kpi.avgDelayMin}">0</span><small>min</small></span>
+      <span class="label">Average delay today</span>
+      <span class="note">across late deliveries</span>
+    </div>
+  </section>
+
+  <div class="tower-main">
+    <section class="tower-map" aria-label="Live map">
+      <div class="tower-sheet" data-sheet></div>
+      <div class="map-legend" aria-label="Map legend">
+        <span><i class="lg-route"></i>Planned route</span>
+        <span><i class="lg-trail"></i>Travelled</span>
+        <span><i class="lg-wh"></i>Warehouse</span>
+        <span><i class="lg-veh band-LOW"></i>On plan</span>
+        <span><i class="lg-veh band-HIGH"></i>High risk</span>
+        <span><i class="lg-veh band-CRITICAL"></i>Critical</span>
+        <span class="lg-live" data-live-status>Connecting…</span>
+      </div>
+    </section>
+
+    <aside class="tower-side" aria-label="Trips and incidents">
+      <div class="side-list" data-side-list>
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" aria-selected="true" data-tab="trips">Trips <span class="muted" data-trip-count></span></button>
+          <button type="button" role="tab" aria-selected="false" data-tab="incidents">Incidents <span class="muted" data-incident-tab-count></span></button>
+          <button type="button" role="tab" aria-selected="false" data-tab="fleet">Fleet</button>
+        </div>
+        <div class="side-scroll" data-pane="trips">
+          <table class="data trip-index">
+            <thead><tr><th>Risk</th><th>Trip</th><th class="r">vs plan</th><th>Condition</th><th>Sq.</th></tr></thead>
+            <tbody data-trip-rows><tr><td colspan="5" class="empty">Loading live trips…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="side-scroll" data-pane="incidents" hidden>
+          <ul class="incident-feed" data-incident-rows></ul>
+        </div>
+        <div class="side-scroll" data-pane="fleet" hidden>
+          <table class="data">
+            <thead><tr><th>Vehicle</th><th>Status</th><th>Base</th></tr></thead>
+            <tbody data-fleet-rows></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="side-detail" data-side-detail hidden></div>
+    </aside>
+  </div>
+</main>
+
+<th:block th:replace="~{layout :: scripts}"></th:block>
+<th:block th:replace="~{layout :: leafletJs}"></th:block>
+<script src="/js/tower.js"></script>
+</body>
+</html>

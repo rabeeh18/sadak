@@ -1,0 +1,27 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1440px;height:900px;overflow:hidden;background:#f1f5f9;color:#0f172a;font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+.nav{position:absolute;left:0;top:0;bottom:0;width:64px;background:#0f172a;display:flex;flex-direction:column;align-items:center;gap:18px;padding-top:18px}
+.nav i{width:28px;height:28px;border-radius:8px;background:#334155}.nav i.on{background:#2563eb}
+.wrap{margin-left:64px;padding:20px;display:grid;grid-template-rows:auto 1fr;gap:16px;height:900px}
+.kp{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.kp div{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px}
+.kp b{display:block;font-size:26px}.kp span{color:#64748b;font-size:12px}
+.body{display:grid;grid-template-columns:1fr 400px;gap:16px}
+.map{background:#e2e8f0;border-radius:12px;position:relative;overflow:hidden}.map svg{position:absolute;inset:0}
+.list{display:flex;flex-direction:column;gap:10px}
+.c{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;display:flex;justify-content:space-between}
+.c small{color:#64748b;display:block}.badge{border-radius:999px;padding:2px 10px;font-size:12px;height:22px}
+</style></head><body>
+<div class="nav"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+<div class="wrap">
+<div class="kp"><div><b>27</b><span>Active trips</span></div><div><b>184</b><span>Delivered today</span></div><div><b>6</b><span>At SLA risk</span></div><div><b>3</b><span>Open incidents</span></div><div><b>11 min</b><span>Avg delay</span></div></div>
+<div class="body"><div class="map"><svg viewBox="0 0 900 740" preserveAspectRatio="none"><path d="M60 620 C220 540 330 500 460 430 S700 290 860 200" stroke="#2563eb" stroke-width="4" fill="none"/><circle cx="460" cy="430" r="10" fill="#2563eb"/><circle cx="640" cy="320" r="10" fill="#ef4444"/></svg></div>
+<div class="list">
+<div class="c"><div><b>TR-105 · Ludhiana → Moga</b><small>PB 08 DK 2290 · Gurpreet Singh</small></div><span class="badge" style="background:#fee2e2;color:#b91c1c">+32 min</span></div>
+<div class="c"><div><b>TR-106 · Jalandhar → Phagwara</b><small>PB 11 CF 0915 · Harjit Kaur</small></div><span class="badge" style="background:#fef3c7;color:#b45309">Stale</span></div>
+<div class="c"><div><b>TR-104 · Ludhiana → Khanna</b><small>PB 10 GX 4471 · Manpreet Gill</small></div><span class="badge" style="background:#dcfce7;color:#15803d">On time</span></div>
+</div></div></div>
+</body></html>

@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Sadak — visual views (mockup)</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Anek+Gurmukhi:wdth,wght@110,800&display=swap" rel="stylesheet">
+<style>
+/* Fleet Operations — "Toposheet" visual system.
+   A survey sheet's palette, lettering and neatline frame applied to a working control tower.
+   The world lends type, palette, density and one signature move (the gridded, neatlined map
+   with grid references everywhere); layout and controls stay standard. */
+
+:root {
+  --ground: #e6e9d6;        /* sheet margin tint */
+  --paper: #fbfbf6;         /* collar boxes, panels */
+  --paper-2: #f2f3e8;       /* alternate rows, hover */
+  --paper-3: #e9ebdc;
+  --ink: #1e1b16;
+  --ink-2: #48443a;
+  --ink-3: #66624f;
+  --rule: #1e1b16;
+  --rule-soft: #c9ccb7;
+  --rule-faint: #dfe1cf;
+
+  --survey-blue: #1b5c9e;   /* water: planned routes, links, selection */
+  --survey-blue-tint: #dce8f2;
+  --contour: #8e5a2b;       /* brown: warehouses, relief */
+  --forest: #2f6f34;        /* on plan, low risk */
+  --forest-tint: #dcebd3;
+  --cultivation: #ecd97c;   /* yellow tint: attention */
+  --ochre: #7a5806;         /* medium risk text */
+  --ochre-tint: #f5ebbb;
+  --orange: #b9520f;        /* high risk */
+  --orange-tint: #f6dfcb;
+  --road: #b8321c;          /* critical, incidents */
+  --road-tint: #f5d8cf;
+
+  --font: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --step--1: 12px;
+  --step-0: 14px;
+  --step-1: 16px;
+  --step-2: 20px;
+  --step-3: 26px;
+  --step-4: 40px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --radius: 3px;
+  --shadow: 0 6px 18px rgba(30, 27, 22, .14), 0 1px 3px rgba(30, 27, 22, .12);
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font: 400 var(--step-0)/1.45 var(--font);
+  font-variation-settings: "wdth" 100;
+  font-feature-settings: "tnum" 1;
+}
+::selection { background: var(--cultivation); color: var(--ink); }
+a { color: var(--survey-blue); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--survey-blue); outline-offset: 2px; }
+h1, h2, h3, h4 { margin: 0; line-height: 1.15; text-wrap: balance; }
+p { margin: 0 0 var(--space-3); }
+small, .small { font-size: var(--step--1); }
+.muted { color: var(--ink-3); }
+.num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+.nowrap { white-space: nowrap; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+* { scrollbar-width: thin; scrollbar-color: #a9ab96 transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #b4b6a1; border: 3px solid var(--paper); border-radius: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+.icon { width: 16px; height: 16px; flex: none; vertical-align: -3px; }
+.icon-lg { width: 20px; height: 20px; }
+
+/* ------------------------------------------------------------------ sheet lettering */
+
+.sheet-title {
+  font-weight: 750;
+  font-variation-settings: "wdth" 125;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+}
+.figure {
+  font-weight: 800;
+  font-variation-settings: "wdth" 72;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.01em;
+  line-height: 1;
+}
+.caps {
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: 11px;
+  font-weight: 650;
+  font-variation-settings: "wdth" 112;
+}
+
+/* ------------------------------------------------------------------ shell: the sheet's top collar */
+
+.topbar {
+  position: sticky; top: 0; z-index: 1000;
+  display: flex; align-items: stretch; gap: var(--space-5);
+  min-height: 56px;
+  padding: 0 var(--space-4);
+  background: var(--paper);
+  border-bottom: 3px double var(--rule);
+}
+.brand {
+  display: flex; align-items: center; gap: var(--space-3);
+  color: var(--ink); text-decoration: none;
+  white-space: nowrap;
+}
+.brand-mark { width: 26px; height: 26px; }
+.brand .sheet-title { font-size: 15px; }
+.brand-sub { display: block; font-size: 11px; color: var(--ink-3); letter-spacing: .02em; text-transform: none; font-weight: 500; font-variation-settings: "wdth" 100; }
+
+.topbar > nav { display: flex; }
+.nav { display: flex; align-items: stretch; gap: 2px; margin: 0; padding: 0; list-style: none; overflow-x: auto; scrollbar-width: none; }
+.nav::-webkit-scrollbar { display: none; }
+.nav > li { display: flex; }
+.nav a {
+  position: relative;
+  display: flex; align-items: center; gap: 6px;
+  height: 100%;
+  padding: 0 var(--space-3);
+  color: var(--ink-2); text-decoration: none; font-weight: 550;
+  white-space: nowrap;
+}
+.nav a:hover { color: var(--ink); background: var(--paper-2); }
+.nav a[aria-current="page"] { color: var(--ink); }
+.nav a[aria-current="page"]::after {
+  content: ""; position: absolute; left: var(--space-3); right: var(--space-3); bottom: -3px; height: 3px; background: var(--survey-blue);
+}
+.nav .count {
+  min-width: 20px; padding: 0 5px; border-radius: 10px;
+  background: var(--road); color: #fff; font-size: 11px; font-weight: 700; text-align: center; line-height: 18px;
+}
+.nav .count:empty, .nav .count[data-zero] { display: none; }
+
+.topbar-right { display: flex; align-items: center; gap: var(--space-3); margin-left: auto; }
+
+.simclock {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 4px 6px 4px 10px;
+  border: 1px solid var(--rule-soft); border-radius: var(--radius);
+  background: var(--paper);
+}
+.simclock-time { font-size: 24px; }
+.simclock-date { font-size: 11px; color: var(--ink-3); line-height: 1.2; white-space: nowrap; }
+.simclock select { width: auto; min-height: 26px; font: inherit; font-size: 12px; padding: 2px 4px; border: 1px solid var(--rule-soft); border-radius: var(--radius); background: var(--paper); }
+.figure-sep { font-weight: 400; color: var(--ink-3); margin: 0 .12em; }
+.usermenu-name { white-space: nowrap; }
+@media (max-width: 1599px) {
+  .nav .icon { display: none; }
+  .nav a { padding: 0 9px; }
+  .topbar { gap: var(--space-3); }
+  .brand-sub { display: none; }
+}
+@media (max-width: 1365px) {
+  .brand-sub, .usermenu-role, .simclock-date { display: none; }
+  .nav a { padding: 0 7px; }
+}
+/* Narrow screens: brand and controls on the first row, the navigation scrolls on its own row. */
+@media (max-width: 1100px) {
+  .topbar { flex-wrap: wrap; row-gap: 0; padding-top: 6px; }
+  .topbar > nav { order: 3; flex: 1 0 100%; min-width: 0; }
+  .nav { height: 40px; }
+  .usermenu-name { display: none; }
+  .usermenu { padding-left: var(--space-2); }
+}
+@media (max-width: 560px) {
+  .simclock select { display: none; }
+  .simclock-time { font-size: 20px; }
+  .brand .sheet-title { font-size: 13px; letter-spacing: .1em; }
+  .page { padding: var(--space-4) var(--space-4) var(--space-5); }
+  .page-head h1 { font-size: 22px; }
+}
+/* Clip (not hide) so sticky headers keep working; wide tables scroll inside .table-wrap instead. */
+body { overflow-x: clip; }
+.simclock[data-paused] .simclock-time { color: var(--ink-3); }
+
+.iconbtn {
+  display: inline-grid; place-items: center;
+  width: 32px; height: 32px; padding: 0;
+  border: 1px solid transparent; border-radius: var(--radius);
+  background: transparent; color: var(--ink-2); cursor: pointer;
+  position: relative;
+}
+.iconbtn:hover { background: var(--paper-2); color: var(--ink); border-color: var(--rule-soft); }
+.iconbtn .dot {
+  position: absolute; top: 3px; right: 3px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px;
+  background: var(--road); color: #fff; font-size: 10px; font-weight: 700; line-height: 16px;
+}
+.iconbtn .dot:empty { display: none; }
+
+.usermenu { display: flex; align-items: center; gap: var(--space-2); padding-left: var(--space-3); border-left: 1px solid var(--rule-soft); }
+.usermenu-name { font-weight: 600; line-height: 1.1; }
+.usermenu-role { display: block; font-size: 11px; color: var(--ink-3); font-weight: 400; }
+
+/* ------------------------------------------------------------------ page scaffolding */
+
+.page { padding: var(--space-5) var(--space-5) var(--space-6); max-width: 1680px; margin: 0 auto; }
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-4); flex-wrap: wrap; }
+.page-head h1 { font-size: var(--step-3); font-weight: 750; font-variation-settings: "wdth" 110; letter-spacing: -.01em; }
+.page-head .sub { color: var(--ink-3); margin-top: 4px; }
+.page-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.back { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-3); text-decoration: none; margin-bottom: var(--space-2); font-size: 13px; }
+.back:hover { color: var(--ink); }
+
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 0;
+}
+.panel + .panel { margin-top: var(--space-4); }
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--rule);
+}
+.panel-head h2 { font-size: var(--step-1); font-weight: 700; }
+.panel-body { padding: var(--space-4); }
+.panel-body.tight { padding: 0; }
+
+.grid-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-4); }
+.grid-main-side { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: var(--space-4); align-items: start; }
+@media (max-width: 1100px) { .grid-2, .grid-main-side { grid-template-columns: minmax(0, 1fr); } }
+
+/* Legend boxes: KPI cells set like a sheet's marginal legend. */
+.legend-strip { display: grid; grid-template-columns: repeat(var(--cols, 6), minmax(0, 1fr)); border: 1px solid var(--rule); background: var(--paper); }
+.legend-cell { padding: 10px 14px 12px; border-right: 1px solid var(--rule-soft); min-width: 0; }
+.legend-cell:last-child { border-right: 0; }
+.legend-cell .figure { font-size: 38px; display: block; }
+.legend-cell .figure small { font-size: 16px; font-weight: 700; margin-left: 2px; }
+.legend-cell .label { font-weight: 600; margin-top: 6px; display: block; }
+.legend-cell .note { color: var(--ink-3); font-size: 12px; display: block; }
+.legend-cell[data-tone="alert"] .figure { color: var(--road); }
+.legend-cell[data-tone="warn"] .figure { color: var(--orange); }
+@media (max-width: 600px) { .legend-strip { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } .legend-cell { border-bottom: 1px solid var(--rule-soft); } }
+@media (max-width: 900px) { .legend-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); } .legend-cell:nth-child(3n) { border-right: 0; } .legend-cell:nth-child(-n+3) { border-bottom: 1px solid var(--rule-soft); } }
+
+/* ------------------------------------------------------------------ controls */
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 34px; padding: 0 14px;
+  border: 1px solid var(--ink); border-radius: var(--radius);
+  background: var(--paper); color: var(--ink);
+  font: 600 13px/1 var(--font); text-decoration: none; cursor: pointer;
+  transition: background-color .15s var(--ease-out), color .15s var(--ease-out);
+  white-space: nowrap;
+}
+.btn:hover { background: var(--paper-2); }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--ink); color: var(--paper); }
+.btn-primary:hover { background: #3a352c; }
+.btn-blue { background: var(--survey-blue); border-color: var(--survey-blue); color: #fff; }
+.btn-blue:hover { background: #164d86; }
+.btn-danger { border-color: var(--road); color: var(--road); }
+.btn-danger:hover { background: var(--road-tint); }
+.btn-quiet { border-color: var(--rule-soft); color: var(--ink-2); }
+.btn-sm { min-height: 28px; padding: 0 10px; font-size: 12px; }
+.btn[disabled], .btn[aria-disabled="true"] { opacity: .45; cursor: not-allowed; transform: none; }
+.btn-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+.field { margin-bottom: var(--space-3); }
+.field .hint { font-size: 12px; color: var(--ink-3); margin-top: 3px; }
+input[type=text], input[type=password], input[type=number], input[type=search], input[type=date], input[type=datetime-local],
+input[type=email], input[type=tel], select, textarea {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid #8f907c; border-radius: var(--radius);
+  background: #fff; color: var(--ink);
+  font: 400 14px/1.3 var(--font);
+}
+textarea { min-height: 72px; resize: vertical; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--survey-blue); outline-offset: 0; border-color: var(--survey-blue); }
+input::placeholder, textarea::placeholder { color: #66624f; }
+input[type=checkbox], input[type=radio] { accent-color: var(--survey-blue); width: 16px; height: 16px; vertical-align: -3px; }
+.check { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0 var(--space-4); }
+
+.filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--rule-soft); background: var(--paper-2); }
+.filters .field { margin: 0; min-width: 150px; }
+.filters label { font-size: 12px; color: var(--ink-2); }
+
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--rule); }
+.tabs button, .tabs a {
+  padding: 10px 14px; border: 0; background: none; font: 600 13px var(--font); color: var(--ink-3); cursor: pointer;
+  border-bottom: 3px solid transparent; margin-bottom: -1px; text-decoration: none; display: inline-flex; gap: 6px; align-items: center;
+}
+.tabs [aria-selected="true"], .tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--survey-blue); }
+
+/* ------------------------------------------------------------------ tables */
+
+.table-wrap { overflow-x: auto; }
+table.data { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.data th {
+  position: sticky; top: 0; z-index: 1;
+  text-align: left; font-weight: 650; font-size: 11px; text-transform: uppercase; letter-spacing: .07em;
+  font-variation-settings: "wdth" 110;
+  color: var(--ink-2); background: var(--paper);
+  padding: 8px 10px; border-bottom: 1px solid var(--rule);
+  white-space: nowrap;
+}
+table.data td { padding: 8px 10px; border-bottom: 1px solid var(--rule-faint); vertical-align: middle; }
+table.data tbody tr:hover { background: var(--paper-2); }
+table.data tr[data-href] { cursor: pointer; }
+table.data .r { text-align: right; }
+table.data th a { color: inherit; text-decoration: none; }
+table.data .sub { display: block; color: var(--ink-3); font-size: 12px; }
+.empty { padding: var(--space-6) var(--space-4); text-align: center; color: var(--ink-3); }
+.empty strong { display: block; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
+
+.pager { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--rule-soft); font-size: 13px; color: var(--ink-3); }
+
+/* ------------------------------------------------------------------ status marks */
+
+.tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 1px 7px; border-radius: 2px;
+  font-size: 12px; font-weight: 600; line-height: 18px; white-space: nowrap;
+  border: 1px solid currentColor;
+}
+.tag-ink { color: var(--ink-2); }
+.tag-blue { color: var(--survey-blue); }
+.tag-green { color: var(--forest); }
+.tag-ochre { color: var(--ochre); background: var(--ochre-tint); border-color: #d9c67c; }
+.tag-orange { color: var(--orange); }
+.tag-red { color: var(--road); }
+.tag-solid-red { color: #fff; background: var(--road); border-color: var(--road); }
+
+/* Spot height: the trip's risk score set like a surveyed height beside a triangulation mark. */
+.spot { display: inline-flex; align-items: center; gap: 3px; font-weight: 800; font-variation-settings: "wdth" 75; font-size: 15px; font-variant-numeric: tabular-nums; }
+.spot svg { width: 10px; height: 10px; }
+.band-LOW { color: var(--forest); }
+.band-MEDIUM { color: var(--ochre); }
+.band-HIGH { color: var(--orange); }
+.band-CRITICAL { color: var(--road); }
+.grid-ref { font-weight: 700; font-variation-settings: "wdth" 80; letter-spacing: .02em; color: var(--contour); }
+
+.progress { height: 4px; background: var(--rule-faint); position: relative; min-width: 60px; }
+.progress > i { position: absolute; inset: 0 auto 0 0; background: var(--ink); }
+
+.reasons { margin: 0; padding: 0; list-style: none; }
+.reasons li { display: grid; grid-template-columns: 42px 1fr; gap: 8px; padding: 5px 0; border-bottom: 1px dotted var(--rule-soft); font-size: 13px; }
+.reasons li:last-child { border-bottom: 0; }
+.reasons .pts { font-weight: 800; font-variation-settings: "wdth" 75; text-align: right; }
+.reasons .what { font-weight: 600; }
+.reasons .why { display: block; color: var(--ink-3); font-size: 12px; }
+
+dl.facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; font-size: 13px; }
+dl.facts dt { color: var(--ink-3); }
+dl.facts dd { margin: 0; font-weight: 500; }
+
+.timeline { list-style: none; margin: 0; padding: 0; }
+.timeline li { position: relative; padding: 0 0 14px 26px; }
+.timeline li::before { content: ""; position: absolute; left: 7px; top: 14px; bottom: -2px; width: 1px; background: var(--rule-soft); }
+.timeline li:last-child::before { display: none; }
+.timeline .node { position: absolute; left: 0; top: 3px; width: 15px; height: 15px; border: 2px solid var(--ink); background: var(--paper); border-radius: 50%; }
+.timeline li[data-state="COMPLETED"] .node { background: var(--ink); }
+.timeline li[data-state="FAILED"] .node { background: var(--road); border-color: var(--road); }
+.timeline li[data-state="SKIPPED"] .node { border-style: dashed; }
+.timeline li[data-state="ARRIVED"] .node { border-color: var(--survey-blue); background: var(--survey-blue-tint); }
+.timeline li[data-next] .node { border-color: var(--survey-blue); box-shadow: 0 0 0 3px var(--survey-blue-tint); }
+.timeline .t-head { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; }
+.timeline .t-meta { color: var(--ink-3); font-size: 12px; }
+
+.flash { padding: 10px 14px; margin-bottom: var(--space-4); border: 1px solid; font-weight: 500; display: flex; gap: 8px; align-items: flex-start; }
+.flash-ok { border-color: var(--forest); background: var(--forest-tint); }
+.flash-error { border-color: var(--road); background: var(--road-tint); }
+
+.demo-note { font-size: 12px; color: var(--ink-3); }
+
+/* ------------------------------------------------------------------ popover (notifications, menus) */
+
+.popover {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 1200;
+  width: 360px; max-height: 70vh; overflow: auto;
+  background: var(--paper); border: 1px solid var(--rule); box-shadow: var(--shadow);
+  transform-origin: top right;
+  animation: pop .18s var(--ease-out);
+}
+.popover[hidden] { display: none; }
+@keyframes pop { from { opacity: 0; transform: scale(.97) translateY(-4px); } to { opacity: 1; transform: none; } }
+.note-item { display: block; padding: 10px 14px; border-bottom: 1px solid var(--rule-faint); color: inherit; text-decoration: none; }
+.note-item:hover { background: var(--paper-2); }
+.note-item[data-unread] .t::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--survey-blue); vertical-align: 1px; }
+.note-item .t { font-weight: 600; }
+.note-item .b { font-size: 12px; color: var(--ink-3); }
+
+.toast-stack { position: fixed; right: 16px; bottom: 16px; z-index: 1300; display: flex; flex-direction: column; gap: 8px; }
+.toast { width: 340px; background: var(--paper); border: 1px solid var(--rule); box-shadow: var(--shadow); padding: 10px 14px; animation: toast-in .3s var(--ease-out); }
+.toast[data-severity="CRITICAL"] strong::before, .toast[data-severity="HIGH"] strong::before {
+  display: inline-block; margin-right: 6px; padding: 0 5px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+  color: #fff; vertical-align: 1px;
+}
+.toast[data-severity="CRITICAL"] strong::before { content: "Critical"; background: var(--road); }
+.toast[data-severity="HIGH"] strong::before { content: "High"; background: var(--orange); }
+@keyframes toast-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+.rule-form { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.rule-threshold { display: inline-flex; align-items: center; gap: 6px; min-width: 150px; }
+.audit-json { font-size: 11px; background: var(--paper-2); padding: 1px 4px; word-break: break-word; }
+.load { margin: 4px 0 0; }
+.load-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+
+/* ------------------------------------------------------------------ trip detail helpers */
+
+.candidate { padding: 10px 0; border-bottom: 1px dotted var(--rule-soft); }
+.candidate:first-of-type { padding-top: 0; }
+.candidate-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.candidate-why { margin: 0 0 8px; padding-left: 16px; font-size: 12px; color: var(--ink-2); }
+.plate {
+  display: inline-block; padding: 1px 6px; border: 1.5px solid var(--ink); border-radius: 2px;
+  font-weight: 800; font-variation-settings: "wdth" 110; letter-spacing: .04em; font-size: 12px; background: #fff; white-space: nowrap;
+}
+.row-actions { position: relative; }
+.row-actions summary { list-style: none; }
+.row-actions summary::-webkit-details-marker { display: none; }
+.row-actions-pop { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; width: 240px; padding: 12px; background: var(--paper); border: 1px solid var(--rule); box-shadow: var(--shadow); }
+details > summary { cursor: pointer; }
+.panel .timeline.panel-body { margin: 0; }
+.sheet-box { height: 100%; }
+
+/* ------------------------------------------------------------------ sign in */
+
+.login { min-height: 100vh; display: grid; place-items: center; padding: var(--space-5) var(--space-4); }
+.login-sheet {
+  width: min(440px, 100%);
+  background: var(--paper);
+  border: 2px solid var(--rule);
+  outline: 1px solid var(--rule);
+  outline-offset: 5px;
+  padding: var(--space-6) var(--space-6) var(--space-5);
+}
+.login-collar { display: flex; gap: var(--space-3); align-items: flex-start; margin-bottom: var(--space-5); }
+.login-collar .brand-mark { width: 40px; height: 40px; }
+.login-collar h1 { font-size: 20px; }
+.login-collar p { margin: 4px 0 0; }
+.login-form { margin-bottom: var(--space-5); }
+.login-demo { border-top: 1px solid var(--rule-soft); padding-top: var(--space-4); }
+.login-demo h2 { margin-bottom: 6px; }
+
+.track { min-height: 100vh; display: grid; place-items: start center; padding: 48px 16px; }
+.track-sheet { width: min(560px, 100%); }
+.track-form { display: grid; grid-template-columns: 1fr 140px auto; gap: 0 10px; align-items: end; margin-bottom: 16px; }
+.track-form .btn { margin-bottom: var(--space-3); }
+.track-status { border-top: 3px double var(--rule); padding-top: 16px; }
+.track-status h2 { font-size: 26px; margin: 4px 0 8px; }
+.track-map { height: 240px; margin-top: 12px; }
+@media (max-width: 520px) {
+  .login-sheet { padding: var(--space-5) var(--space-4); }
+  .track-form { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* Logo: ਸੜਕ wordmark; ੜ (the letter unique to Punjabi, with a road-like tail) in road red. */
+.mark-p4 { --s: 28px; flex: none; font: 800 var(--s)/1 "Anek Gurmukhi", sans-serif; font-variation-settings: "wdth" 110; color: var(--ink); }
+.mark-p4 span { color: var(--road); }
+/* Gurmukhi letters hang from a tall top line, so their ink sits high in the line box. Nudge the
+   mark down so its visual centre lines up with the SADAK capitals and the menu text (measured). */
+.mark-p4 { position: relative; top: .09em; }
+</style>
+<style>
+body{min-width:1400px}
+.mock-label{margin:28px 0 8px;font:650 11px/1 Archivo;letter-spacing:.08em;text-transform:uppercase;color:var(--contour)}
+.toggle{display:inline-flex;border:1px solid var(--ink)}.toggle span{padding:6px 14px;font-weight:600;font-size:13px}.toggle span.on{background:var(--ink);color:var(--paper)}
+/* ---------- Trips timetable */
+.tt{position:relative;padding:0 0 0 250px}
+.tt-axis{position:relative;height:26px;border-bottom:1px solid var(--rule)}
+.tt-axis span{position:absolute;top:6px;transform:translateX(-50%);font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.tt-lane{position:relative;height:46px;border-bottom:1px solid var(--rule-faint)}
+.tt-lane:hover{background:var(--paper-2)}
+.tt-label{position:absolute;left:-250px;top:0;width:240px;height:46px;display:flex;align-items:center;gap:10px;padding-left:14px}
+.tt-label b{font-size:13px}.tt-label small{display:block;color:var(--ink-3);font-size:11px;line-height:1.2}
+.bar-plan{position:absolute;top:14px;height:18px;border:1px dashed var(--ink-3);background:transparent}
+.bar-act{position:absolute;top:17px;height:12px;background:var(--ink)}
+.bar-proj{position:absolute;top:17px;height:12px;background:repeating-linear-gradient(90deg,var(--ink) 0 6px,transparent 6px 9px)}
+.bar-late{position:absolute;top:17px;height:12px;background:var(--road)}
+.tick{position:absolute;top:12px;width:2px;height:22px;background:var(--paper);box-shadow:0 0 0 1px var(--ink)}
+.tick.done{background:var(--ink)}
+.tick.due{background:var(--road);box-shadow:none;width:2px;top:9px;height:28px}
+.now{position:absolute;top:0;bottom:0;width:2px;background:var(--survey-blue);z-index:3}
+.now::before{content:"NOW 14:42";position:absolute;top:-22px;left:50%;transform:translateX(-50%);font:700 10px Archivo;color:var(--survey-blue);letter-spacing:.06em;white-space:nowrap}
+.tt-key{display:flex;gap:18px;font-size:12px;color:var(--ink-2);padding:10px 14px;border-top:1px solid var(--rule-soft)}
+.tt-key i{display:inline-block;vertical-align:-2px;margin-right:6px}
+/* ---------- Shipments */
+.pipe{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--rule);background:var(--paper)}
+.pipe div{padding:12px 16px;border-right:1px solid var(--rule-soft);position:relative}
+.pipe div:last-child{border-right:0}
+.pipe div::after{content:"→";position:absolute;right:-9px;top:50%;transform:translateY(-50%);background:var(--paper);color:var(--ink-3);font-size:13px;padding:0 2px}
+.pipe div:last-child::after{display:none}
+.pipe .figure{font-size:34px;display:block}.pipe small{color:var(--ink-3)}
+.hz{position:relative;height:250px;margin:0 20px}
+.hz-axis{position:absolute;left:0;right:0;bottom:0;height:24px;border-top:1px solid var(--rule)}
+.hz-axis span{position:absolute;top:5px;transform:translateX(-50%);font-size:11px;color:var(--ink-3)}
+.dot{position:absolute;width:12px;height:12px;border-radius:50%;transform:translate(-50%,50%)}
+.dot.wait{background:var(--paper);border:2px solid var(--ochre)}
+.dot.plan{background:var(--paper);border:2px solid var(--ink)}
+.dot.out{background:var(--survey-blue)}
+.dot.risk{background:var(--road)}
+.hz-now{position:absolute;top:0;bottom:24px;width:2px;background:var(--survey-blue)}
+.hz-band{position:absolute;top:0;bottom:24px;background:rgba(184,50,28,.06);border-left:1px dashed var(--road)}
+.hz-note{position:absolute;font-size:11px;color:var(--road);font-weight:650}
+/* ---------- Incidents */
+.cols{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.col h3{display:flex;justify-content:space-between;font-size:12px;letter-spacing:.07em;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid var(--ink);margin-bottom:10px}
+.col h3 span{color:var(--ink-3)}
+.ic{background:var(--paper);border:1px solid var(--rule);padding:10px 12px;margin-bottom:10px}
+.ic .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.ic .t{font-weight:600;font-size:13px;line-height:1.3}
+.ic .m{font-size:11px;color:var(--ink-3);margin-top:6px;display:flex;justify-content:space-between}
+.timer{font:800 13px Archivo;font-variation-settings:"wdth" 75;font-variant-numeric:tabular-nums}
+.timer.hot{color:var(--road)}
+.col.done .ic{opacity:.6}
+/* ---------- Fleet yard */
+.yard{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.wh h3{font-size:13px;padding:8px 12px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between}
+.wh h3 b{color:var(--contour);letter-spacing:.06em}
+.veh{display:grid;grid-template-columns:120px 1fr 54px;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--rule-faint)}
+.strip{position:relative;height:10px;background:var(--rule-faint)}
+.strip i{position:absolute;top:0;bottom:0}
+.s-trip{background:var(--ink)}.s-shop{background:var(--road)}.s-idle{background:transparent}
+.veh small{font-size:11px;color:var(--ink-3);text-align:right}
+</style></head><body>
+
+<header class="topbar" style="position:static">
+  <a class="brand"><span class="mark-p4" style="--s:28px" lang="pa">ਸ<span>ੜ</span>ਕ</span><span><span class="sheet-title">Sadak</span></span></a>
+  <nav><ul class="nav"><li><a>Control tower</a></li><li><a aria-current="page">Trips</a></li><li><a>Incidents <span class="count">3</span></a></li><li><a>Planning</a></li><li><a>Shipments</a></li><li><a>Fleet</a></li><li><a>Analytics</a></li></ul></nav>
+</header>
+
+<main class="page">
+<!-- ====================================================== TRIPS -->
+<p class="mock-label">Mockup 1 · Trips → day timetable</p>
+<div class="page-head"><div><h1>Trips · Thursday 23 Oct</h1><p class="sub">Every trip today on one timeline. Faint dashed box = the plan; solid bar = what happened; hatched = projected; red = past the plan.</p></div>
+  <div class="page-actions"><span class="toggle"><span class="on">Timetable</span><span>List</span></span></div></div>
+<section class="panel">
+  <div class="tt" style="padding-top:26px">
+    <div class="tt-axis"><span style="left:0%">07:00</span><span style="left:15.4%">09:00</span><span style="left:30.8%">11:00</span><span style="left:46.2%">13:00</span><span style="left:61.5%">15:00</span><span style="left:76.9%">17:00</span><span style="left:92.3%">19:00</span></div>
+    <div class="now" style="left:calc(250px + (100% - 250px) * .5937)"></div>
+    <!-- lanes: % = (hour-7)/13 -->
+    <div class="tt-lane"><div class="tt-label"><span class="spot band-CRITICAL" style="font-size:14px"><svg viewBox="0 0 10 10"><path d="M5 .8 9.4 9.2H.6z" fill="currentColor"/></svg>82</span><div><b>TR-105</b> <span class="plate" style="font-size:10px">DK 2290</span><small>Ludhiana → Moga</small></div></div>
+      <div class="bar-plan" style="left:21%;width:35%"></div><div class="bar-act" style="left:22%;width:37.4%"></div><div class="bar-proj" style="left:59.4%;width:5%"></div><div class="bar-late" style="left:56%;width:8.4%;opacity:.85"></div>
+      <i class="tick done" style="left:29%"></i><i class="tick done" style="left:36%"></i><i class="tick done" style="left:45%"></i><i class="tick" style="left:62%"></i><i class="tick due" style="left:59%"></i></div>
+    <div class="tt-lane"><div class="tt-label"><span class="spot band-HIGH" style="font-size:14px"><svg viewBox="0 0 10 10"><path d="M5 .8 9.4 9.2H.6z" fill="currentColor"/></svg>48</span><div><b>TR-106</b> <span class="plate" style="font-size:10px">CF 0915</span><small>Jalandhar → Phagwara · no signal</small></div></div>
+      <div class="bar-plan" style="left:31%;width:36%"></div><div class="bar-act" style="left:31.5%;width:24%"></div><div class="bar-proj" style="left:55.5%;width:13%;opacity:.4"></div>
+      <i class="tick done" style="left:38%"></i><i class="tick done" style="left:45%"></i><i class="tick done" style="left:52%"></i><i class="tick" style="left:63%"></i></div>
+    <div class="tt-lane"><div class="tt-label"><span class="spot band-LOW" style="font-size:14px"><svg viewBox="0 0 10 10"><path d="M5 .8 9.4 9.2H.6z" fill="currentColor"/></svg>12</span><div><b>TR-104</b> <span class="plate" style="font-size:10px">GX 4471</span><small>Ludhiana → Khanna</small></div></div>
+      <div class="bar-plan" style="left:26%;width:38%"></div><div class="bar-act" style="left:26%;width:33.4%"></div><div class="bar-proj" style="left:59.4%;width:6%"></div>
+      <i class="tick done" style="left:33%"></i><i class="tick done" style="left:41%"></i><i class="tick done" style="left:50%"></i><i class="tick done" style="left:56%"></i><i class="tick" style="left:63%"></i></div>
+    <div class="tt-lane"><div class="tt-label"><span class="spot band-LOW" style="font-size:14px"><svg viewBox="0 0 10 10"><path d="M5 .8 9.4 9.2H.6z" fill="currentColor"/></svg>0</span><div><b>TR-109</b> <span class="plate" style="font-size:10px">HB 5174</span><small>Patiala → Rajpura</small></div></div>
+      <div class="bar-plan" style="left:44%;width:30%"></div><div class="bar-act" style="left:44%;width:15.4%"></div><div class="bar-proj" style="left:59.4%;width:13.5%"></div>
+      <i class="tick done" style="left:52%"></i><i class="tick" style="left:61%"></i><i class="tick" style="left:66%"></i><i class="tick" style="left:71%"></i></div>
+    <div class="tt-lane"><div class="tt-label"><span class="spot band-LOW" style="font-size:14px"><svg viewBox="0 0 10 10"><path d="M5 .8 9.4 9.2H.6z" fill="currentColor"/></svg>0</span><div><b>TR-111</b> <span class="plate" style="font-size:10px">MZ 3021</span><small>Mohali → Kharar</small></div></div>
+      <div class="bar-plan" style="left:53%;width:20%"></div><div class="bar-act" style="left:53.5%;width:5.9%"></div><div class="bar-proj" style="left:59.4%;width:13%"></div>
+      <i class="tick" style="left:62%"></i><i class="tick" style="left:68%"></i></div>
+    <div class="tt-lane"><div class="tt-label"><span class="spot band-LOW" style="font-size:14px;color:var(--ink-3)"><svg viewBox="0 0 10 10"><path d="M5 .8 9.4 9.2H.6z" fill="currentColor"/></svg>–</span><div><b>TR-114</b> <span class="plate" style="font-size:10px">AT 9498</span><small>Ludhiana → Samrala · departs 15:30</small></div></div>
+      <div class="bar-plan" style="left:65.4%;width:22%"></div><i class="tick" style="left:72%"></i><i class="tick" style="left:79%"></i><i class="tick" style="left:85%"></i></div>
+    <div class="tt-lane"><div class="tt-label"><span class="spot band-LOW" style="font-size:14px"><svg viewBox="0 0 10 10"><path d="M5 .8 9.4 9.2H.6z" fill="currentColor"/></svg>0</span><div><b>TR-098</b> <span class="plate" style="font-size:10px">BS 8685</span><small>Bathinda → Mansa · done</small></div></div>
+      <div class="bar-plan" style="left:8%;width:27%"></div><div class="bar-act" style="left:8.5%;width:25%;background:var(--forest)"></div>
+      <i class="tick done" style="left:16%"></i><i class="tick done" style="left:23%"></i><i class="tick done" style="left:31%"></i></div>
+  </div>
+  <div class="tt-key"><span><i style="width:22px;height:10px;border:1px dashed var(--ink-3)"></i>Plan</span><span><i style="width:22px;height:8px;background:var(--ink)"></i>Actual</span><span><i style="width:22px;height:8px;background:repeating-linear-gradient(90deg,var(--ink) 0 6px,transparent 6px 9px)"></i>Projected</span><span><i style="width:22px;height:8px;background:var(--road)"></i>Beyond plan</span><span><i style="width:2px;height:12px;background:var(--road)"></i>Deadline</span><span><i style="width:8px;height:12px;background:var(--forest)"></i>Finished on time</span><span style="margin-left:auto">Click a lane to open the trip · hover a tick for the stop</span></div>
+</section>
+
+<!-- ====================================================== SHIPMENTS -->
+<p class="mock-label">Mockup 2 · Shipments → pipeline + deadline horizon</p>
+<div class="page-head"><div><h1>Shipments</h1><p class="sub">Where every parcel is in its life, and which deadlines are coming up.</p></div><div class="page-actions"><span class="toggle"><span class="on">Horizon</span><span>List</span></span></div></div>
+<section class="pipe" style="margin-bottom:12px">
+  <div><span class="figure" style="color:var(--ochre)">31</span><small>Awaiting planning</small></div>
+  <div><span class="figure">18</span><small>Planned</small></div>
+  <div><span class="figure" style="color:var(--survey-blue)">64</span><small>Out for delivery · <b style="color:var(--road)">6 at risk</b></small></div>
+  <div><span class="figure" style="color:var(--forest)">184</span><small>Delivered today</small></div>
+  <div><span class="figure" style="color:var(--road)">5</span><small>Failed today</small></div>
+</section>
+<section class="panel">
+  <div class="panel-head"><h2>Deadlines, next 12 hours</h2><span class="small muted">each dot is one shipment at its deadline · height = weight</span></div>
+  <div class="panel-body" style="padding-top:24px">
+    <div class="hz">
+      <div class="hz-band" style="left:0;width:12%"></div><span class="hz-note" style="left:1%;top:4px">next 90 min — 9 due, 4 at risk</span>
+      <div class="hz-now" style="left:0"></div>
+      <i class="dot risk" style="left:2%;bottom:120px"></i><i class="dot risk" style="left:3.4%;bottom:70px"></i><i class="dot out" style="left:5%;bottom:150px"></i><i class="dot risk" style="left:6.2%;bottom:40px"></i><i class="dot out" style="left:7.5%;bottom:90px"></i><i class="dot risk" style="left:9%;bottom:200px"></i><i class="dot out" style="left:10.5%;bottom:60px"></i><i class="dot out" style="left:11%;bottom:130px"></i>
+      <i class="dot out" style="left:15%;bottom:80px"></i><i class="dot out" style="left:17%;bottom:170px"></i><i class="dot plan" style="left:19%;bottom:50px"></i><i class="dot out" style="left:22%;bottom:110px"></i><i class="dot plan" style="left:25%;bottom:140px"></i><i class="dot out" style="left:27%;bottom:30px"></i><i class="dot plan" style="left:31%;bottom:95px"></i><i class="dot plan" style="left:34%;bottom:180px"></i><i class="dot wait" style="left:38%;bottom:60px"></i><i class="dot plan" style="left:41%;bottom:120px"></i><i class="dot wait" style="left:45%;bottom:150px"></i><i class="dot wait" style="left:49%;bottom:40px"></i><i class="dot wait" style="left:52%;bottom:100px"></i><i class="dot wait" style="left:57%;bottom:190px"></i><i class="dot wait" style="left:61%;bottom:70px"></i><i class="dot wait" style="left:66%;bottom:130px"></i><i class="dot wait" style="left:72%;bottom:55px"></i><i class="dot wait" style="left:78%;bottom:160px"></i><i class="dot wait" style="left:84%;bottom:85px"></i><i class="dot wait" style="left:91%;bottom:110px"></i>
+      <div class="hz-axis"><span style="left:0%">now</span><span style="left:16.7%">+2 h</span><span style="left:33.3%">+4 h</span><span style="left:50%">+6 h</span><span style="left:66.7%">+8 h</span><span style="left:83.3%">+10 h</span><span style="left:100%">+12 h</span></div>
+    </div>
+    <div class="tt-key" style="border:0;padding:12px 0 0"><span><i class="dot risk" style="position:static;transform:none;display:inline-block"></i>At risk</span><span><i class="dot out" style="position:static;transform:none;display:inline-block"></i>Out for delivery</span><span><i class="dot plan" style="position:static;transform:none;display:inline-block"></i>Planned</span><span><i class="dot wait" style="position:static;transform:none;display:inline-block"></i>Not planned yet</span><span style="margin-left:auto">Click a stage above to filter · drag across the strip to select</span></div>
+  </div>
+</section>
+
+<!-- ====================================================== INCIDENTS -->
+<p class="mock-label">Mockup 3 · Incidents → triage board</p>
+<div class="page-head"><div><h1>Incidents</h1><p class="sub">Worst first in each column; the timer turns red once nobody has picked it up for 10 minutes.</p></div><div class="page-actions"><span class="toggle"><span class="on">Board</span><span>History</span></span></div></div>
+<section class="cols">
+  <div class="col"><h3>Detected <span>2</span></h3>
+    <div class="ic"><div class="top"><span class="tag tag-solid-red">critical</span><span class="timer hot">14 min</span></div><div class="t">PB 08 AT 7404 broke down on TR-1529, 5 stops remaining</div><div class="m"><span>INC-2407 · Breakdown</span><span class="grid-ref">H5</span></div></div>
+    <div class="ic"><div class="top"><span class="tag tag-orange">high</span><span class="timer">3 min</span></div><div class="t">PB 11 CF 0915 has stopped reporting its location</div><div class="m"><span>INC-2411 · Location stale</span><span class="grid-ref">G5</span></div></div></div>
+  <div class="col"><h3>Acknowledged <span>1</span></h3>
+    <div class="ic"><div class="top"><span class="tag tag-orange">high</span><span class="timer">21 min</span></div><div class="t">2 deliveries projected late on TR-105 (worst +32 min)</div><div class="m"><span>simran · SLA risk</span><span class="grid-ref">F7</span></div></div></div>
+  <div class="col"><h3>Action in progress <span>1</span></h3>
+    <div class="ic"><div class="top"><span class="tag tag-ochre">medium</span><span class="timer">38 min</span></div><div class="t">PB 10 GX 4471 is off its planned route</div><div class="m"><span>vikram · recalculated route</span><span class="grid-ref">I7</span></div></div></div>
+  <div class="col done"><h3>Resolved today <span>9</span></h3>
+    <div class="ic"><div class="top"><span class="tag tag-green">resolved</span><span class="timer">26 min</span></div><div class="t">Delivery failed at Moga — Sethi Medicos</div><div class="m"><span>re-attempt booked</span><span class="grid-ref">F7</span></div></div>
+    <div class="ic"><div class="top"><span class="tag tag-green">resolved</span><span class="timer">12 min</span></div><div class="t">Unexpectedly long stop at Doraha</div><div class="m"><span>cleared automatically</span><span class="grid-ref">J7</span></div></div></div>
+</section>
+
+<!-- ====================================================== FLEET -->
+<p class="mock-label">Mockup 4 · Fleet → yard board</p>
+<div class="page-head"><div><h1>Fleet</h1><p class="sub">Every vehicle by home warehouse, with today drawn as a strip: black on a trip, red in the workshop, empty idle.</p></div><div class="page-actions"><span class="toggle"><span class="on">Yard</span><span>List</span></span></div></div>
+<section class="yard">
+  <div class="panel wh"><h3><span><b>LDH</b> Ludhiana DC</span><span class="muted">4 of 5 out · 78%</span></h3>
+    <div class="veh"><span class="plate">PB 10 GX 4471</span><span class="strip"><i class="s-trip" style="left:20%;width:42%"></i></span><small>On trip</small></div>
+    <div class="veh"><span class="plate">PB 10 AT 9498</span><span class="strip"><i class="s-trip" style="left:10%;width:30%"></i><i class="s-trip" style="left:48%;width:20%"></i></span><small>On trip</small></div>
+    <div class="veh"><span class="plate">PB 10 DK 2290</span><span class="strip"><i class="s-trip" style="left:21%;width:38%"></i></span><small>On trip</small></div>
+    <div class="veh"><span class="plate">PB 10 MZ 7712</span><span class="strip"><i class="s-shop" style="left:30%;width:70%"></i></span><small style="color:var(--road)">Workshop</small></div>
+    <div class="veh"><span class="plate">PB 10 KR 1180</span><span class="strip"></span><small>Idle</small></div></div>
+  <div class="panel wh"><h3><span><b>JUC</b> Jalandhar DC</span><span class="muted">3 of 5 out · 61%</span></h3>
+    <div class="veh"><span class="plate">PB 08 AT 7404</span><span class="strip"><i class="s-trip" style="left:35%;width:12%"></i><i class="s-shop" style="left:47%;width:53%"></i></span><small style="color:var(--road)">Broken down</small></div>
+    <div class="veh"><span class="plate">PB 08 CF 0915</span><span class="strip"><i class="s-trip" style="left:31%;width:29%"></i></span><small>On trip</small></div>
+    <div class="veh"><span class="plate">PB 08 BS 4329</span><span class="strip"><i class="s-trip" style="left:15%;width:25%"></i><i class="s-trip" style="left:50%;width:10%"></i></span><small>On trip</small></div>
+    <div class="veh"><span class="plate">PB 08 HB 2201</span><span class="strip"><i class="s-trip" style="left:5%;width:28%"></i></span><small>Idle</small></div></div>
+  <div class="panel wh"><h3><span><b>PTA</b> Patiala Depot</span><span class="muted">2 of 4 out · 44%</span></h3>
+    <div class="veh"><span class="plate">PB 11 HB 5174</span><span class="strip"><i class="s-trip" style="left:44%;width:16%"></i></span><small>On trip</small></div>
+    <div class="veh"><span class="plate">PB 11 AT 6929</span><span class="strip"><i class="s-trip" style="left:12%;width:25%"></i></span><small>Idle</small></div>
+    <div class="veh"><span class="plate">PB 11 CF 2155</span><span class="strip"><i class="s-trip" style="left:40%;width:20%"></i></span><small>On trip</small></div>
+    <div class="veh"><span class="plate">PB 11 GX 3390</span><span class="strip"></span><small>Idle</small></div></div>
+</section>
+</main>
+</body></html>

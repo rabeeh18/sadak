@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Sign in')}"></head>
+<body class="login-body">
+<main class="login">
+  <section class="login-sheet">
+    <div class="login-collar">
+      <span class="mark-p4" style="--s:52px" lang="pa" aria-hidden="true">ਸ<span>ੜ</span>ਕ</span>
+      <div>
+        <h1 class="sheet-title">Sadak</h1>
+        <p class="muted">Control tower for live deliveries across Punjab</p>
+      </div>
+    </div>
+
+    <div class="flash flash-error" role="alert" th:if="${param.error}">That username and password did not match. Try again.</div>
+    <div class="flash flash-ok" role="status" th:if="${param.signedOut}">You have signed out.</div>
+
+    <form method="post" action="/login" class="login-form">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username" required autofocus>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <button class="btn btn-primary" type="submit" style="width:100%">Sign in</button>
+    </form>
+
+    <div class="login-demo" th:if="${demo}">
+      <h2 class="caps">Explore the demo</h2>
+      <p class="muted small">Every vehicle, person and shipment here is synthetic. Pick a role to look around without a password.</p>
+      <form method="post" action="/demo-login" class="btn-row">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <button class="btn" name="as" value="dispatcher" type="submit"><svg class="icon"><use href="/img/icons.svg#i-map"></use></svg>Dispatcher</button>
+        <button class="btn" name="as" value="admin" type="submit"><svg class="icon"><use href="/img/icons.svg#i-shield"></use></svg>Admin</button>
+        <button class="btn" name="as" value="driver" type="submit"><svg class="icon"><use href="/img/icons.svg#i-truck"></use></svg>Driver (phone view)</button>
+      </form>
+      <p class="small" style="margin-top:12px"><a href="/track">Track a shipment</a> — the public page recipients use.</p>
+    </div>
+  </section>
+</main>
+</body>
+</html>

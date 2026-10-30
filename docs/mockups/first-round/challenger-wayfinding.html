@@ -1,0 +1,36 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,400..800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1440px;height:900px;overflow:hidden;background:#1b1b1b;color:#111;font:15px/1.4 "Anek Latin",sans-serif}
+.top{height:52px;background:#111;color:#fff;display:flex;align-items:center;gap:26px;padding:0 24px}
+.top h1{font-weight:800;font-size:20px}.top nav{display:flex;gap:20px;color:#bbb}.top nav b{color:#ffd200}
+.top .t{margin-left:auto;font-weight:700;font-size:20px}
+.band{height:64px;background:#ffd200;display:flex;align-items:center;gap:20px;padding:0 24px;border-bottom:2px solid #111}
+.band .pic{width:44px;height:44px;background:#111;color:#fff;display:grid;place-items:center;font-weight:800;font-size:22px}
+.band .msg{font-size:24px;font-weight:700}.band .n{margin-left:auto;font-size:40px;font-weight:800}
+.band.red .pic{background:#e03b24}
+.main{display:grid;grid-template-columns:1fr 480px;height:calc(900px - 52px - 132px)}
+.map{background:#2a2a2a;position:relative}
+.map svg{position:absolute;inset:0}
+.rows{background:#fff}
+.r{display:grid;grid-template-columns:90px 1fr 110px;align-items:center;padding:14px 20px;border-bottom:2px solid #111}
+.r .id{font-weight:800;font-size:20px}.r .to{font-size:18px}.r .to small{display:block;color:#555;font-size:13px}
+.r .d{font-weight:800;font-size:44px;text-align:right}
+</style></head><body>
+<div class="top"><h1>FLEET OPS</h1><nav><b>Control tower</b><span>Trips</span><span>Incidents</span><span>Planning</span><span>Fleet</span><span>Analytics</span></nav><span class="t">14:42 IST</span></div>
+<div class="band red"><div class="pic">!</div><div class="msg">TR-105 Moga — two deliveries will miss deadline</div><div class="n">+32 min</div></div>
+<div class="band"><div class="pic">⌁</div><div class="msg">TR-106 Phagwara — no location for 7 minutes</div><div class="n">7 min</div></div>
+<div class="main">
+<div class="map"><svg viewBox="0 0 960 716" preserveAspectRatio="none">
+<path d="M60 640 C220 560 330 500 460 440 S700 300 900 200" stroke="#555" stroke-width="12" fill="none"/>
+<path d="M330 500 L460 440" stroke="#ffd200" stroke-width="6"/><circle cx="460" cy="440" r="12" fill="#ffd200" stroke="#111" stroke-width="3"/>
+<circle cx="640" cy="330" r="12" fill="#e03b24" stroke="#fff" stroke-width="3"/></svg></div>
+<div class="rows">
+<div class="r"><span class="id">TR-105</span><span class="to">Moga<small>Gurpreet Singh · stop 3/6</small></span><span class="d" style="color:#e03b24">+32</span></div>
+<div class="r"><span class="id">TR-106</span><span class="to">Phagwara<small>Harjit Kaur · stop 4/5</small></span><span class="d">?</span></div>
+<div class="r"><span class="id">TR-104</span><span class="to">Khanna<small>Manpreet Gill · stop 5/6</small></span><span class="d">+5</span></div>
+<div class="r"><span class="id">TR-109</span><span class="to">Rajpura<small>Amandeep Sandhu · stop 2/4</small></span><span class="d">−3</span></div>
+</div></div>
+</body></html>

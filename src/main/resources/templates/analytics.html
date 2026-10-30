@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Analytics')}"></head>
+<body>
+<header th:replace="~{layout :: header('analytics')}"></header>
+<main class="page">
+  <div class="page-head">
+    <div>
+      <h1>Analytics</h1>
+      <p class="sub" th:text="${@fmt.day(f.from())} + ' to ' + ${@fmt.day(f.to())} + ' · ' + ${s.trips} + ' trips · demo history is synthetic'">range</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn" th:href="'/analytics/export.csv?' + ${query}"><svg class="icon"><use href="/img/icons.svg#i-download"></use></svg>Export trips (CSV)</a>
+    </div>
+  </div>
+
+  <section class="panel" style="margin-bottom:16px">
+    <form class="filters" method="get" action="/analytics" style="border-bottom:0">
+      <div class="field"><label for="a-from">From</label><input id="a-from" type="date" name="from" th:value="${f.from()}"></div>
+      <div class="field"><label for="a-to">To</label><input id="a-to" type="date" name="to" th:value="${f.to()}"></div>
+      <div class="field"><label for="a-wh">Warehouse</label><select id="a-wh" name="warehouse"><option value="">All</option>
+        <option th:each="w : ${warehouses}" th:value="${w.id}" th:text="${w.name}" th:selected="${w.id == f.warehouseId()}"></option></select></div>
+      <div class="field"><label for="a-veh">Vehicle</label><select id="a-veh" name="vehicle"><option value="">All</option>
+        <option th:each="v : ${vehicles}" th:value="${v.id}" th:text="${v.registration}" th:selected="${v.id == f.vehicleId()}"></option></select></div>
+      <div class="field"><label for="a-drv">Driver</label><select id="a-drv" name="driver"><option value="">All</option>
+        <option th:each="d : ${drivers}" th:value="${d.id}" th:text="${d.fullName}" th:selected="${d.id == f.driverId()}"></option></select></div>
+      <button class="btn" type="submit">Apply</button>
+    </form>
+  </section>
+
+  <section class="legend-strip" style="--cols:4">
+    <div class="legend-cell"><span class="figure" th:text="${s.on_time_rate != null ? @fmt.one(s.on_time_rate) + '%' : '—'}">0</span>
+      <span class="label">On-time delivery rate</span><span class="note">delivered by deadline ÷ (delivered + failed)</span></div>
+    <div class="legend-cell"><span class="figure"><th:block th:text="${@fmt.one(s.avg_late_min)}">0</th:block><small>min</small></span>
+      <span class="label">Average delivery delay</span><span class="note">mean lateness of late deliveries only</span></div>
+    <div class="legend-cell" th:attr="data-tone=${s.breaches > 0 ? 'warn' : ''}"><span class="figure" th:text="${s.breaches}">0</span>
+      <span class="label">SLA breaches</span><span class="note">late, failed, or deadline passed en route</span></div>
+    <div class="legend-cell"><span class="figure" th:text="${s.utilisation != null ? @fmt.one(s.utilisation) + '%' : '—'}">0</span>
+      <span class="label">Fleet utilisation</span><span class="note" th:text="'hours on trips ÷ (' + ${s.vehicles} + ' vehicles × ' + ${s.days} + ' days × 12 h)'">x</span></div>
+  </section>
+  <section class="legend-strip" style="--cols:4;border-top:0;margin-bottom:16px">
+    <div class="legend-cell"><span class="figure"><th:block th:text="${@fmt.one(s.downtime_hours)}">0</th:block><small>h</small></span>
+      <span class="label">Vehicle downtime</span><span class="note">breakdowns and workshop time in range</span></div>
+    <div class="legend-cell"><span class="figure"><th:block th:text="${@fmt.one(s.resolve_min)}">0</th:block><small>min</small></span>
+      <span class="label">Incident resolution time</span><span class="note" th:text="'mean, ' + ${s.incidents} + ' incidents'">x</span></div>
+    <div class="legend-cell"><span class="figure" th:text="${@fmt.ratioDelta(s.efficiency)}">0</span>
+      <span class="label">Route efficiency</span><span class="note">actual vs planned trip duration</span></div>
+    <div class="legend-cell"><span class="figure" th:text="${s.stop_completion != null ? @fmt.one(s.stop_completion) + '%' : '—'}">0</span>
+      <span class="label">Stop completion rate</span><span class="note">completed ÷ closed delivery stops</span></div>
+  </section>
+
+  <div class="grid-2">
+    <section class="panel">
+      <div class="panel-head"><h2>Deliveries per day</h2><span class="small muted">click a day to see its trips</span></div>
+      <div class="panel-body" style="height:280px"><canvas data-chart="daily" aria-label="Deliveries per day, on time and late"></canvas></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>On-time rate and average delay</h2></div>
+      <div class="panel-body" style="height:280px"><canvas data-chart="ontime" aria-label="On-time rate per day"></canvas></div>
+    </section>
+  </div>
+
+  <div class="grid-2" style="margin-top:16px">
+    <section class="panel">
+      <div class="panel-head"><h2>Where the plan runs slow</h2><span class="small muted">mean arrival vs planned, by town</span></div>
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>Town</th><th class="r">Stops</th><th class="r">Avg vs plan</th><th class="r">Within 15 min</th><th style="width:30%"></th></tr></thead>
+        <tbody>
+          <tr th:each="t : ${byTown}">
+            <td th:text="${t.town}">town</td><td class="r num" th:text="${t.stops}">0</td>
+            <td class="r num" th:classappend="${t.avg_arrival_delay > 15} ? 'band-CRITICAL' : (${t.avg_arrival_delay > 5} ? 'band-HIGH' : '')" th:text="${@fmt.delta(t.avg_arrival_delay.intValue())}">0</td>
+            <td class="r num" th:text="${t.within_15} + '%'">0</td>
+            <td><div class="progress" style="height:6px"><i th:style="'width:' + ${t.within_15} + '%'"></i></div></td>
+          </tr>
+          <tr th:if="${byTown.isEmpty()}"><td colspan="5" class="empty">Not enough stops in range.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>By warehouse</h2></div>
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>Warehouse</th><th class="r">Trips</th><th class="r">Delivered</th><th class="r">On time</th><th class="r">Avg delay</th><th class="r">Duration vs plan</th></tr></thead>
+        <tbody>
+          <tr th:each="w : ${byWarehouse}" th:attr="data-href='/analytics?from=' + ${f.from()} + '&to=' + ${f.to()} + '&warehouse=' + ${w.id}">
+            <td><strong th:text="${w.code}" style="color:var(--contour)">C</strong> <th:block th:text="${w.name}">n</th:block></td>
+            <td class="r num" th:text="${w.trips}">0</td><td class="r num" th:text="${w.delivered}">0</td>
+            <td class="r num" th:text="${w.on_time_rate != null ? w.on_time_rate + '%' : '—'}">0</td>
+            <td class="r num" th:text="${w.avg_late} + ' min'">0</td>
+            <td class="r num" th:text="${@fmt.ratioDelta(w.efficiency)}">0</td>
+          </tr>
+        </tbody>
+      </table></div>
+    </section>
+  </div>
+
+  <div class="grid-2" style="margin-top:16px">
+    <section class="panel">
+      <div class="panel-head"><h2>Drivers</h2><span class="small muted">lowest on-time rate first</span></div>
+      <div class="table-wrap" style="max-height:420px;overflow:auto">
+      <table class="data">
+        <thead><tr><th>Driver</th><th class="r">Trips</th><th class="r">Delivered</th><th class="r">Failed</th><th class="r">On time</th></tr></thead>
+        <tbody>
+          <tr th:each="d : ${byDriver}" th:attr="data-href='/fleet/drivers/' + ${d.id}">
+            <td th:text="${d.full_name}">n</td><td class="r num" th:text="${d.trips}">0</td><td class="r num" th:text="${d.delivered}">0</td>
+            <td class="r num" th:text="${d.failed}">0</td><td class="r num" th:text="${d.on_time_rate != null ? d.on_time_rate + '%' : '—'}">0</td>
+          </tr>
+        </tbody>
+      </table></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Why deliveries failed</h2></div>
+      <div class="panel-body" style="height:260px"><canvas data-chart="failures" aria-label="Failure reasons"></canvas></div>
+      <div class="panel-head" style="border-top:1px solid var(--rule)"><h2>Incidents per day</h2></div>
+      <div class="panel-body" style="height:220px"><canvas data-chart="incidents" aria-label="Incidents per day by type"></canvas></div>
+    </section>
+  </div>
+  <script type="application/json" id="chart-data" th:utext="${chartData}">{}</script>
+</main>
+<th:block th:replace="~{layout :: scripts}"></th:block>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="/js/analytics.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <th:block th:replace="~{layout :: head('Track a shipment')}"></th:block>
+  <th:block th:replace="~{layout :: leafletCss}"></th:block>
+</head>
+<body>
+<main class="track">
+  <section class="login-sheet track-sheet">
+    <div class="login-collar">
+      <span class="mark-p4" style="--s:40px" lang="pa" aria-hidden="true">ਸ<span>ੜ</span>ਕ</span>
+      <div><h1 class="sheet-title">Track a shipment</h1><p class="muted">Enter the tracking number and the PIN code of the delivery address.</p></div>
+    </div>
+
+    <form method="post" action="/track" class="track-form">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      <div class="field"><label for="n">Tracking number</label><input id="n" name="n" required th:value="${n}" placeholder="FL4100123" autocomplete="off" style="text-transform:uppercase"></div>
+      <div class="field"><label for="pin">Delivery PIN code</label><input id="pin" name="pin" required pattern="\d{6}" maxlength="6" inputmode="numeric" placeholder="142001"></div>
+      <button class="btn btn-primary" type="submit">Track</button>
+    </form>
+    <div class="flash flash-error" role="alert" th:if="${problem}" th:text="${problem}">problem</div>
+
+    <th:block th:if="${s != null}">
+      <div class="track-status">
+        <span class="caps" th:text="${s.trackingNo}">FL</span>
+        <h2 th:text="${s.status.label()}">Status</h2>
+        <p th:if="${s.status.name() == 'OUT_FOR_DELIVERY' and eta != null}">
+          Expected around <strong class="figure" style="font-size:28px" th:text="${@fmt.time(eta)}">--</strong>
+          <span th:if="${stopsBefore != null and stopsBefore > 0}" th:text="'· ' + ${stopsBefore} + ' stop' + (${stopsBefore == 1} ? '' : 's') + ' before yours'">x</span>
+        </p>
+        <p th:if="${s.status.name() == 'DELIVERED'}" th:text="'Delivered ' + ${@fmt.dateTime(s.deliveredAt)} + '.'">x</p>
+        <p th:if="${s.status.name() == 'FAILED'}">We could not deliver this time. The sender will arrange another attempt.</p>
+        <p th:if="${s.status.name() == 'CREATED' or s.status.name() == 'PLANNED'}" th:text="'Due by ' + ${@fmt.dateTime(s.deadline)} + '. It has not left the warehouse yet.'">x</p>
+        <dl class="facts">
+          <dt>To</dt><dd th:text="${town} + ' · ' + ${s.destPin}">town</dd>
+          <dt>From</dt><dd th:text="${s.originWarehouse.city}">city</dd>
+          <dt>Due by</dt><dd th:text="${@fmt.dateTime(s.deadline)}">t</dd>
+        </dl>
+      </div>
+      <div th:if="${vehicleLat != null}" class="track-map" data-track-map
+           th:attr="data-vlat=${vehicleLat},data-vlng=${vehicleLng},data-dlat=${s.destLat},data-dlng=${s.destLng}"></div>
+      <ol class="timeline" th:if="${!events.isEmpty()}" style="margin-top:16px">
+        <li th:each="e : ${events}" data-state="COMPLETED"><span class="node"></span>
+          <div class="t-head"><span th:text="${@fmt.humanize(e.toStatus)}">st</span><span class="small muted num" th:text="${@fmt.dateTime(e.changedAt)}">t</span></div></li>
+      </ol>
+    </th:block>
+    <p class="small muted" style="margin-top:20px">Demo service: all shipments are synthetic. <a href="/login">Staff sign in</a></p>
+  </section>
+</main>
+<script th:if="${vehicleLat != null}" src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script th:if="${vehicleLat != null}" src="/js/sheetmap.js"></script>
+<script th:if="${vehicleLat != null}" src="/js/track.js"></script>
+</body>
+</html>

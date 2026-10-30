@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Users')}"></head>
+<body>
+<header th:replace="~{layout :: header('admin')}"></header>
+<main class="page">
+  <div class="page-head"><div><h1>Admin</h1><p class="sub">Who can sign in and what they can do.</p></div></div>
+  <nav th:replace="~{parts :: adminTabs(${tab})}"></nav>
+  <th:block th:replace="~{layout :: flash}"></th:block>
+  <div class="grid-main-side">
+    <section class="panel">
+      <table class="data">
+        <thead><tr><th>User</th><th>Name</th><th>Roles</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <tr th:each="u : ${users}">
+            <td><strong th:text="${u.username}">u</strong></td>
+            <td th:text="${u.fullName}">n</td>
+            <td><span class="tag tag-ink" th:each="r : ${u.roles}" th:text="${r.label()}" style="margin-right:4px">r</span></td>
+            <td><span class="tag" th:classappend="${u.enabled} ? 'tag-green' : 'tag-ink'" th:text="${u.enabled} ? 'Active' : 'Disabled'">s</span></td>
+            <td><form method="post" th:action="@{/admin/users/{id}/toggle(id=${u.id})}" th:if="${u.username != me.username}">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+              <button class="btn btn-sm btn-quiet" type="submit" th:text="${u.enabled} ? 'Disable' : 'Enable'">t</button></form></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+    <aside>
+      <section class="panel">
+        <div class="panel-head"><h2>Add a user</h2></div>
+        <form class="panel-body" method="post" action="/admin/users">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <div class="field"><label for="un">Username</label><input id="un" name="username" required autocomplete="off"></div>
+          <div class="field"><label for="fn">Full name</label><input id="fn" name="fullName" required></div>
+          <div class="field"><label for="pw">Password</label><input id="pw" name="password" type="password" minlength="10" required autocomplete="new-password"><div class="hint">At least 10 characters.</div></div>
+          <div class="field"><label for="role">Role</label><select id="role" name="role"><option th:each="r : ${roles}" th:value="${r}" th:text="${r.label()}">r</option></select>
+            <div class="hint">Driver accounts must also be linked to a driver record to see trips.</div></div>
+          <button class="btn btn-primary" type="submit">Create user</button>
+        </form>
+      </section>
+    </aside>
+  </div>
+</main>
+<th:block th:replace="~{layout :: scripts}"></th:block>
+</body>
+</html>

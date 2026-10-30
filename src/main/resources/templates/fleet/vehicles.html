@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Vehicles')}"></head>
+<body>
+<header th:replace="~{layout :: header('fleet')}"></header>
+<main class="page">
+  <div class="page-head"><div><h1>Fleet</h1>
+    <p class="sub" th:text="${vehicles.size()} + ' vehicles · ' + (${counts['AVAILABLE']} ?: 0) + ' available · ' + (${counts['ON_TRIP']} ?: 0) + ' on trips · ' + ((${counts['BROKEN_DOWN']} ?: 0) + (${counts['MAINTENANCE']} ?: 0)) + ' off the road'">x</p></div></div>
+  <nav th:replace="~{parts :: fleetTabs(${tab})}"></nav>
+  <th:block th:replace="~{layout :: flash}"></th:block>
+  <div class="grid-main-side">
+    <section class="panel">
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Registration</th><th>Type</th><th class="r">Capacity</th><th>Base</th><th>Status</th><th>Last seen</th><th>Sq.</th><th>Feed</th></tr></thead>
+          <tbody>
+            <tr th:each="v : ${vehicles}" th:attr="data-href=@{/fleet/vehicles/{id}(id=${v.id})}">
+              <td><a th:href="@{/fleet/vehicles/{id}(id=${v.id})}" class="plate" th:text="${v.registration}" style="text-decoration:none;color:inherit">PB</a></td>
+              <td th:text="${v.type}">type</td>
+              <td class="r num" th:text="${v.capacityKg} + ' kg'">kg</td>
+              <td th:text="${v.homeWarehouse.name}">wh</td>
+              <td><span th:replace="~{parts :: vehicleStatus(${v.status})}"></span></td>
+              <td class="num" th:text="${@fmt.ago(v.lastSeenAt)}">t</td>
+              <td><span class="grid-ref" th:text="${@fmt.grid(v.lastLat, v.lastLng)}">A1</span></td>
+              <td class="small muted" th:text="${v.simulated ? 'Simulated' : 'Live GPS'}">sim</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <aside>
+      <section class="panel">
+        <div class="panel-head"><h2>Register a vehicle</h2></div>
+        <form class="panel-body" method="post" action="/fleet/vehicles">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <div class="field"><label for="reg">Registration</label><input id="reg" name="registration" required placeholder="PB 10 GX 4471" autocomplete="off"></div>
+          <div class="field"><label for="type">Type</label><input id="type" name="type" required placeholder="Tata 407 light truck"></div>
+          <div class="field"><label for="cap">Capacity (kg)</label><input id="cap" name="capacityKg" type="number" min="100" max="40000" required value="2500"></div>
+          <div class="field"><label for="wh">Home warehouse</label><select id="wh" name="warehouseId"><option th:each="w : ${warehouses}" th:value="${w.id}" th:text="${w.name}">w</option></select></div>
+          <button class="btn btn-primary" type="submit">Register</button>
+        </form>
+      </section>
+    </aside>
+  </div>
+</main>
+<th:block th:replace="~{layout :: scripts}"></th:block>
+</body>
+</html>

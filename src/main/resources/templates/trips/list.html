@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Trips')}"></head>
+<body>
+<header th:replace="~{layout :: header('trips')}"></header>
+<main class="page">
+  <div class="page-head">
+    <div>
+      <h1>Trips</h1>
+      <p class="sub">Every planned, live and finished trip. Live trips show their current risk.</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn btn-primary" href="/planning"><svg class="icon"><use href="/img/icons.svg#i-plus"></use></svg>Plan a trip</a>
+    </div>
+  </div>
+  <th:block th:replace="~{layout :: flash}"></th:block>
+
+  <section class="panel">
+    <form class="filters" method="get" action="/trips">
+      <div class="field"><label for="f-status">Status</label>
+        <select id="f-status" name="status"><option value="">Any</option>
+          <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.label()}" th:selected="${s == status}"></option></select></div>
+      <div class="field"><label for="f-wh">Warehouse</label>
+        <select id="f-wh" name="warehouse"><option value="">All</option>
+          <option th:each="w : ${warehouses}" th:value="${w.id}" th:text="${w.name}" th:selected="${w.id == warehouse}"></option></select></div>
+      <div class="field"><label for="f-veh">Vehicle</label>
+        <select id="f-veh" name="vehicle"><option value="">All</option>
+          <option th:each="v : ${vehicles}" th:value="${v.id}" th:text="${v.registration}" th:selected="${v.id == vehicle}"></option></select></div>
+      <div class="field"><label for="f-drv">Driver</label>
+        <select id="f-drv" name="driver"><option value="">All</option>
+          <option th:each="d : ${drivers}" th:value="${d.id}" th:text="${d.fullName}" th:selected="${d.id == driver}"></option></select></div>
+      <div class="field"><label for="f-from">Planned from</label><input id="f-from" type="date" name="from" th:value="${from}"></div>
+      <div class="field"><label for="f-to">to</label><input id="f-to" type="date" name="to" th:value="${to}"></div>
+      <button class="btn" type="submit"><svg class="icon"><use href="/img/icons.svg#i-filter"></use></svg>Apply</button>
+    </form>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr>
+          <th>Trip</th><th>Status</th><th>Risk</th><th>Vehicle</th><th>Driver</th><th>Warehouse</th>
+          <th>Planned start</th><th class="r">Stops</th><th class="r">Load</th><th>Finished</th>
+        </tr></thead>
+        <tbody>
+          <tr th:each="t : ${page.content}" th:attr="data-href=@{/trips/{id}(id=${t.id})}">
+            <td><a th:href="@{/trips/{id}(id=${t.id})}" th:text="${t.code}" style="font-weight:700">TR</a></td>
+            <td><span th:replace="~{parts :: tripStatus(${t.status})}"></span></td>
+            <td>
+              <th:block th:with="s=${live[t.id]}">
+                <th:block th:if="${s != null}"><span th:replace="~{parts :: spot(${s.riskScore}, ${s.riskBand})}"></span></th:block>
+                <th:block th:if="${s == null}"><span th:replace="~{parts :: spot(${t.riskScore}, ${t.riskBand.name()})}"></span></th:block>
+              </th:block>
+            </td>
+            <td><span class="plate" th:text="${t.vehicle.registration}">PB</span></td>
+            <td th:text="${t.driver.fullName}">Driver</td>
+            <td th:text="${t.warehouse.name}">WH</td>
+            <td class="num" th:text="${@fmt.when(t.plannedStart)}">time</td>
+            <td class="r num" th:text="${t.stops.size()}">0</td>
+            <td class="r num" th:text="${t.totalWeightKg} + ' kg'">0</td>
+            <td class="num" th:text="${t.actualEnd != null ? @fmt.when(t.actualEnd) : '—'}">—</td>
+          </tr>
+          <tr th:if="${page.content.isEmpty()}"><td colspan="10"><div class="empty"><strong>No trips match these filters</strong>Widen the date range or clear a filter.</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <nav th:replace="~{parts :: pager(${page}, '/trips?' + (${status} != null ? 'status=' + ${status} + '&' : '') + (${warehouse} != null ? 'warehouse=' + ${warehouse} + '&' : '') + 'from=' + ${from} + '&to=' + ${to} + '&')}"></nav>
+  </section>
+</main>
+<th:block th:replace="~{layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Workshop log')}"></head>
+<body>
+<header th:replace="~{layout :: header('fleet')}"></header>
+<main class="page">
+  <div class="page-head"><div><h1>Fleet</h1><p class="sub">Breakdowns, services and inspections. Downtime feeds the analytics.</p></div></div>
+  <nav th:replace="~{parts :: fleetTabs(${tab})}"></nav>
+  <th:block th:replace="~{layout :: flash}"></th:block>
+  <section class="panel">
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Vehicle</th><th>Kind</th><th>Reason</th><th>From</th><th>To</th><th>Duration</th><th>By</th></tr></thead>
+        <tbody>
+          <tr th:each="r : ${records}" th:attr="data-href=@{/fleet/vehicles/{id}(id=${r.vehicle.id})}">
+            <td><span class="plate" th:text="${r.vehicle.registration}">PB</span></td>
+            <td><span class="tag" th:classappend="${r.kind.name() == 'BREAKDOWN'} ? 'tag-red' : 'tag-ink'" th:text="${@fmt.humanize(r.kind.name())}">k</span></td>
+            <td th:text="${r.reason}">r</td>
+            <td class="num" th:text="${@fmt.dateTime(r.startedAt)}">t</td>
+            <td class="num" th:text="${r.endedAt != null ? @fmt.dateTime(r.endedAt) : 'still in workshop'}">t</td>
+            <td class="num" th:text="${@fmt.duration(r.durationUntil(now))}">d</td>
+            <td th:text="${r.createdBy ?: '—'}">by</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<th:block th:replace="~{layout :: scripts}"></th:block>
+</body>
+</html>

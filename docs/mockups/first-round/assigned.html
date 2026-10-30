@@ -1,0 +1,98 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,400..800&family=Mukta+Mahee:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--peacock:#0e4f63;--peacock-2:#0a3d4d;--ground:#f6f7f4;--ink:#13201f;--muted:#5d6b69;--rule:#d5dbd8;--marigold:#f4b400;--vermilion:#d7351f;--ultra:#2443b5;--parrot:#2f9e44}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1440px;height:900px;overflow:hidden;background:var(--ground);color:var(--ink);font:14px/1.45 "Mukta Mahee",system-ui,sans-serif}
+.top{height:56px;background:var(--peacock);display:flex;align-items:center;padding:0 20px;gap:28px;color:#e8f1ef;border-bottom:4px solid var(--marigold)}
+.brand{font:800 22px/1 "Anek Latin";font-stretch:125%;letter-spacing:.5px;color:#fff}
+.brand b{color:var(--marigold)}
+.nav{display:flex;gap:22px;font-size:14px}
+.nav a{color:#bcd3cf;text-decoration:none}.nav a.on{color:#fff;font-weight:700;box-shadow:inset 0 -3px 0 var(--marigold);padding-bottom:16px;margin-bottom:-19px}
+.clock{margin-left:auto;display:flex;gap:14px;align-items:center;font-size:13px}
+.clock .t{font:700 20px "Anek Latin";font-variant-numeric:tabular-nums}
+.chip{border:1px solid #3d7584;padding:3px 9px;border-radius:3px}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid var(--rule);background:#fff}
+.k{padding:12px 20px;border-right:1px solid var(--rule)}
+.k .v{font:800 40px/1 "Anek Latin";font-stretch:90%;font-variant-numeric:tabular-nums}
+.k .l{font-size:12px;color:var(--muted);margin-top:4px}
+.k.alert .v{color:var(--vermilion)}
+.main{display:grid;grid-template-columns:1fr 440px;height:calc(900px - 56px - 4px - 79px)}
+.map{position:relative;background:#e4ebe6;overflow:hidden;border-right:1px solid var(--rule)}
+.map svg{position:absolute;inset:0}
+.plate{position:absolute;background:#fff;border:1px solid var(--ink);font:800 12px/1 "Anek Latin";font-stretch:115%;padding:5px 7px 7px;border-radius:2px}
+.plate::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:6px;background:repeating-linear-gradient(45deg,var(--b) 0 4px,transparent 4px 8px);border:1px solid var(--ink);border-top:0}
+.side{display:flex;flex-direction:column;background:var(--ground)}
+.sh{display:flex;align-items:baseline;justify-content:space-between;padding:14px 18px 10px}
+.sh h2{font:800 18px "Anek Latin";font-stretch:110%}
+.sh span{font-size:12px;color:var(--muted)}
+.trip{margin:0 14px 12px;background:#fff;border:1px solid var(--rule);position:relative}
+.trip .band{height:8px;background:repeating-linear-gradient(90deg,var(--b) 0 10px,#fff 10px 12px,var(--b) 12px 22px,transparent 22px 24px)}
+.trip.crit .band{background:repeating-linear-gradient(45deg,var(--vermilion) 0 6px,#fff 6px 10px)}
+.trip .body{display:grid;grid-template-columns:auto 1fr auto;gap:4px 14px;padding:10px 14px 12px;align-items:center}
+.reg{font:800 15px/1 "Anek Latin";font-stretch:118%;border:1.5px solid var(--ink);padding:5px 7px;background:#ffe9a3}
+.who{font-size:13px}.who b{display:block;font-size:14px}
+.delta{font:800 26px/1 "Anek Latin";text-align:right;font-variant-numeric:tabular-nums}
+.delta small{display:block;font:500 11px "Mukta Mahee";color:var(--muted)}
+.why{grid-column:1/-1;font-size:12px;color:var(--muted);border-top:1px solid var(--rule);padding-top:7px;display:flex;gap:12px}
+.why em{font-style:normal;color:var(--ink);font-weight:700}
+.prog{grid-column:1/-1;height:4px;background:var(--rule)}.prog i{display:block;height:4px;background:var(--ink)}
+</style></head><body>
+<div class="top">
+ <div class="brand">FLEET<b>·</b>OPS</div>
+ <nav class="nav"><a class="on">Control tower</a><a>Trips</a><a>Incidents <b style="color:var(--marigold)">3</b></a><a>Planning</a><a>Fleet</a><a>Analytics</a></nav>
+ <div class="clock"><span class="chip">SIM 30×</span><span class="t">14:42</span><span>Tue 21 Oct · IST</span></div>
+</div>
+<div class="kpis">
+ <div class="k"><div class="v">27</div><div class="l">Active trips</div></div>
+ <div class="k"><div class="v">184</div><div class="l">Delivered today</div></div>
+ <div class="k alert"><div class="v">6</div><div class="l">Shipments at SLA risk</div></div>
+ <div class="k alert"><div class="v">3</div><div class="l">Open incidents</div></div>
+ <div class="k"><div class="v">4</div><div class="l">Vehicles idle / in workshop</div></div>
+ <div class="k"><div class="v">11<span style="font-size:20px"> min</span></div><div class="l">Average delivery delay</div></div>
+</div>
+<div class="main">
+ <div class="map">
+  <svg viewBox="0 0 1000 760" preserveAspectRatio="none">
+   <path d="M80 640 C220 560 300 520 420 470 S640 360 820 250" stroke="#c9d3cc" stroke-width="14" fill="none"/>
+   <path d="M140 160 C260 240 380 300 500 380 S700 560 900 640" stroke="#c9d3cc" stroke-width="10" fill="none"/>
+   <path d="M420 470 C470 420 520 380 600 330" stroke="#2443b5" stroke-width="4" fill="none" stroke-dasharray="10 6"/>
+   <path d="M300 520 L420 470" stroke="#13201f" stroke-width="4" fill="none"/>
+   <path d="M500 380 C560 440 620 500 700 560" stroke="#d7351f" stroke-width="4" fill="none" stroke-dasharray="10 6"/>
+   <circle cx="420" cy="470" r="10" fill="#0e4f63" stroke="#fff" stroke-width="3"/>
+   <circle cx="600" cy="330" r="6" fill="#fff" stroke="#2443b5" stroke-width="3"/>
+   <circle cx="700" cy="560" r="6" fill="#fff" stroke="#d7351f" stroke-width="3"/>
+   <rect x="488" y="368" width="24" height="24" fill="#0e4f63"/>
+  </svg>
+  <div class="plate" style="left:440px;top:400px;--b:var(--parrot)">PB 10 GX 4471</div>
+  <div class="plate" style="left:520px;top:440px;--b:var(--vermilion)">PB 08 DK 2290</div>
+  <div class="plate" style="left:250px;top:300px;--b:var(--marigold)">PB 11 CF 0915</div>
+  <div style="position:absolute;left:470px;top:330px;font:700 13px 'Anek Latin';color:#0e4f63">LUDHIANA DC</div>
+  <div style="position:absolute;left:24px;bottom:20px;background:#fff;border:1px solid var(--rule);padding:8px 12px;font-size:12px;display:flex;gap:16px">
+   <span>━ travelled</span><span style="color:#2443b5">┅ planned</span><span style="color:#d7351f">┅ at risk</span>
+  </div>
+ </div>
+ <aside class="side">
+  <div class="sh"><h2>Trips needing attention</h2><span>worst first · 27 live</span></div>
+  <div class="trip crit"><div class="band"></div><div class="body">
+   <div class="reg">PB 08 DK 2290</div><div class="who"><b>TR-105 · Ludhiana → Moga</b>Gurpreet Singh · 48% · stop 3 of 6</div>
+   <div class="delta" style="color:var(--vermilion)">+32<small>min vs deadline</small></div>
+   <div class="prog"><i style="width:48%"></i></div>
+   <div class="why">Risk <em>82 critical</em><span>+40 projected late</span><span>+25 long stop 18 min</span><span>+17 two deadlines</span></div>
+  </div></div>
+  <div class="trip" style="--b:var(--marigold)"><div class="band"></div><div class="body">
+   <div class="reg">PB 11 CF 0915</div><div class="who"><b>TR-106 · Jalandhar → Phagwara</b>Harjit Kaur · 61% · stop 4 of 5</div>
+   <div class="delta">?<small>location stale 7 min</small></div>
+   <div class="prog"><i style="width:61%"></i></div>
+   <div class="why">Risk <em>48 high</em><span>+30 no GPS 7 min</span><span>+18 deadline in 50 min</span></div>
+  </div></div>
+  <div class="trip" style="--b:var(--parrot)"><div class="band"></div><div class="body">
+   <div class="reg">PB 10 GX 4471</div><div class="who"><b>TR-104 · Ludhiana → Khanna</b>Manpreet Gill · 75% · stop 5 of 6</div>
+   <div class="delta">+5<small>min, within SLA</small></div>
+   <div class="prog"><i style="width:75%"></i></div>
+   <div class="why">Risk <em>12 low</em><span>+12 minor delay</span></div>
+  </div></div>
+ </aside>
+</div>
+</body></html>

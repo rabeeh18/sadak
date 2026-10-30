@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pa"><head><meta charset="utf-8"><title>ਸੜਕ — Headline Road, wider</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Noto+Sans+Gurmukhi:wght@900&display=swap" rel="stylesheet">
+<style>
+:root{--ground:#e6e9d6;--paper:#fbfbf6;--ink:#1e1b16;--ink3:#66624f;--red:#b8321c;--soft:#c9ccb7}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ground);color:var(--ink);font:14px/1.5 "Archivo",sans-serif;padding:40px}
+h1{font-weight:750;font-variation-settings:"wdth" 125;text-transform:uppercase;letter-spacing:.14em;font-size:20px}
+.sub{color:var(--ink3);margin:6px 0 28px}
+.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-bottom:20px}
+.card{background:var(--paper);border:2px solid var(--ink);outline:1px solid var(--ink);outline-offset:-7px;padding:28px}
+.card h2{font-size:16px;font-weight:700;margin-top:16px}.card p{color:#48443a;font-size:13px}
+.stage{display:flex;align-items:center;justify-content:center;min-height:170px}
+
+/* The mark: a road band whose lower edge swallows the letters' own headline. */
+.mark{--s:80px;--road:.30;display:inline-flex;flex-direction:column;align-items:stretch}
+.mark .road{height:calc(var(--s) * var(--road));background:var(--ink);display:flex;align-items:center;padding:0 calc(var(--s) * .08);position:relative;z-index:1}
+.mark .road i{flex:1;height:max(2px, calc(var(--s) * .055));background:repeating-linear-gradient(90deg,var(--red) 0 calc(var(--s) * .16),transparent calc(var(--s) * .16) calc(var(--s) * .26))}
+.mark .word{font:900 var(--s)/1 "Noto Sans Gurmukhi",sans-serif;margin-top:calc(var(--s) * -.33);padding:0 calc(var(--s) * .02)}
+.bar{display:flex;align-items:center;gap:12px;height:56px;padding:0 14px;border-bottom:3px double var(--ink);background:var(--paper);outline:1px solid var(--soft)}
+.lat{font-weight:750;font-variation-settings:"wdth" 125;letter-spacing:.16em;text-transform:uppercase;font-size:12px;color:var(--ink3)}
+.tab{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--soft);padding:4px 12px 4px 7px;border-radius:6px 6px 0 0}
+</style></head><body>
+<h1>P1 · Headline Road, wider</h1>
+<p class="sub">The top line of the Gurmukhi letters becomes a full road, wide enough for the red centre dashes to read. Two road widths to compare.</p>
+
+<div class="row">
+  <div class="card"><div class="stage"><span class="mark" style="--s:96px;--road:.28"><span class="road"><i></i></span><span class="word">ਸੜਕ</span></span></div>
+    <h2>A · road 28% of letter height</h2><p>Bold, letters still dominant.</p></div>
+  <div class="card"><div class="stage"><span class="mark" style="--s:96px;--road:.38"><span class="road"><i></i></span><span class="word">ਸੜਕ</span></span></div>
+    <h2>B · road 38% of letter height</h2><p>The road becomes the hero; letters hang from it like signs from a highway gantry.</p></div>
+</div>
+
+<div class="row">
+  <div class="card"><div class="bar"><span class="mark" style="--s:30px;--road:.32"><span class="road"><i></i></span><span class="word">ਸੜਕ</span></span><span class="lat">Sadak</span></div>
+    <h2>In the app header</h2><p>At header size the road needs ~32% so the dashes still show.</p></div>
+  <div class="card" style="display:flex;flex-direction:column;justify-content:center;gap:16px">
+    <div><span class="tab"><svg width="16" height="16" viewBox="0 0 16 16"><rect width="16" height="16" fill="#1e1b16"/><path d="M2 8 H14" stroke="#b8321c" stroke-width="2.6" stroke-dasharray="3.5 2"/></svg>Control tower · ਸੜਕ</span></div>
+    <div style="background:var(--ink);padding:24px;display:flex;justify-content:center"><span class="mark" style="--s:64px;--road:.34;--ink:#fbfbf6"><span class="road" style="background:#fbfbf6"><i></i></span><span class="word" style="color:#fbfbf6">ਸੜਕ</span></span></div>
+    <h2 style="margin-top:0">Browser tab and on dark</h2><p>The tab icon is just the stretch of road; reversed version for dark backgrounds.</p></div>
+</div>
+</body></html>

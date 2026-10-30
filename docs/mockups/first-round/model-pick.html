@@ -1,0 +1,45 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,400..800&family=Mukta+Mahee:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1440px;height:900px;overflow:hidden;background:#efe4c8;color:#3b2a1a;font:14px/1.45 "Mukta Mahee",sans-serif}
+.collar{position:absolute;inset:0;padding:64px 340px 40px 40px}
+.head{position:absolute;top:0;left:40px;right:40px;height:64px;display:flex;align-items:center;gap:30px;border-bottom:1px solid #3b2a1a}
+.head h1{font:800 22px "Anek Latin";font-stretch:120%;letter-spacing:2px}
+.head nav{display:flex;gap:20px;font-size:13px}.head nav b{border-bottom:2px solid #c8371e}
+.head .ref{margin-left:auto;font:600 13px "Anek Latin"}
+.map{position:relative;width:100%;height:100%;border:2px solid #3b2a1a;background:#f5edd6;overflow:hidden}
+.map svg{position:absolute;inset:0}
+.grid{position:absolute;inset:0;background-image:linear-gradient(#3b2a1a22 1px,transparent 1px),linear-gradient(90deg,#3b2a1a22 1px,transparent 1px);background-size:120px 120px}
+.right{position:absolute;top:64px;right:40px;width:280px;bottom:40px;display:flex;flex-direction:column;gap:14px;padding-top:12px}
+.k{display:grid;grid-template-columns:1fr 1fr;border:1px solid #3b2a1a}
+.k div{padding:8px 10px;border-bottom:1px solid #3b2a1a55}
+.k .v{font:800 30px/1 "Anek Latin"}.k .l{font-size:11px}
+.idx h3{font:700 13px "Anek Latin";letter-spacing:1.5px;border-bottom:1px solid #3b2a1a;padding-bottom:4px;margin-bottom:6px}
+.row{display:grid;grid-template-columns:46px 1fr 50px;gap:8px;padding:6px 0;border-bottom:1px dotted #3b2a1a88;font-size:13px}
+.row b{font-family:"Anek Latin"}.row .d{text-align:right;font-weight:700}
+.legend{margin-top:auto;border:1px solid #3b2a1a;padding:8px 10px;font-size:11px;display:grid;grid-template-columns:1fr 1fr;gap:4px}
+</style></head><body>
+<div class="head"><h1>FLEET OPERATIONS</h1><nav><b>Control tower</b><span>Trips</span><span>Incidents 3</span><span>Planning</span><span>Fleet</span><span>Analytics</span></nav><span class="ref">SHEET 43 O · 14:42 IST · SIM 30×</span></div>
+<div class="collar"><div class="map"><div class="grid"></div>
+<svg viewBox="0 0 1060 796" preserveAspectRatio="none">
+<path d="M0 500 C160 470 260 520 400 460 S700 300 1060 260" stroke="#2a6fb0" stroke-width="5" fill="none"/>
+<path d="M60 700 C200 620 360 560 520 470 S800 300 1000 200" stroke="#c8371e" stroke-width="7" fill="none"/>
+<path d="M60 700 C200 620 360 560 520 470 S800 300 1000 200" stroke="#f5edd6" stroke-width="3" fill="none"/>
+<path d="M200 100 C300 220 420 330 520 470 S640 700 760 780" stroke="#c8371e" stroke-width="5" fill="none"/>
+<ellipse cx="760" cy="580" rx="140" ry="80" fill="none" stroke="#8a5a2b" stroke-width="1"/><ellipse cx="760" cy="580" rx="100" ry="54" fill="none" stroke="#8a5a2b" stroke-width="1"/>
+<rect x="508" y="458" width="24" height="24" fill="#3b2a1a"/><text x="540" y="452" font-family="Anek Latin" font-weight="700" font-size="15" fill="#3b2a1a">LUDHIANA</text>
+<circle cx="420" cy="520" r="9" fill="#c8371e" stroke="#3b2a1a" stroke-width="2"/><text x="300" y="548" font-size="13" fill="#3b2a1a">TR-105 +32 min</text>
+<circle cx="700" cy="350" r="9" fill="#9cc68a" stroke="#3b2a1a" stroke-width="2"/>
+</svg></div></div>
+<div class="right">
+<div class="k"><div><div class="v">27</div><div class="l">Active trips</div></div><div><div class="v">184</div><div class="l">Delivered today</div></div><div><div class="v" style="color:#c8371e">6</div><div class="l">At SLA risk</div></div><div><div class="v" style="color:#c8371e">3</div><div class="l">Open incidents</div></div></div>
+<div class="idx"><h3>TRIP INDEX · WORST FIRST</h3>
+<div class="row"><b>TR-105</b><span>Ludhiana → Moga</span><span class="d" style="color:#c8371e">+32</span></div>
+<div class="row"><b>TR-106</b><span>Jalandhar → Phagwara</span><span class="d">stale</span></div>
+<div class="row"><b>TR-104</b><span>Ludhiana → Khanna</span><span class="d">+5</span></div>
+<div class="row"><b>TR-109</b><span>Patiala → Rajpura</span><span class="d">−3</span></div></div>
+<div class="legend"><span>━ National highway</span><span>■ Warehouse</span><span>● Vehicle</span><span>┅ Planned</span></div>
+</div>
+</body></html>

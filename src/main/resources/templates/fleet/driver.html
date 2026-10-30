@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head(${d.fullName})}"></head>
+<body>
+<header th:replace="~{layout :: header('fleet')}"></header>
+<main class="page">
+  <a class="back" href="/fleet/drivers"><svg class="icon"><use href="/img/icons.svg#i-arrow-left"></use></svg>Drivers</a>
+  <div class="page-head"><div><h1 th:text="${d.fullName}">name</h1>
+    <p class="sub" th:text="${d.status.label()} + ' · ' + ${d.homeWarehouse.name} + ' · licence ' + ${d.licenseNumber} + (${d.licenseValidOn(today)} ? ' valid to ' : ' expired ') + ${d.licenseExpiry}">x</p></div></div>
+  <th:block th:replace="~{layout :: flash}"></th:block>
+  <div class="grid-main-side">
+    <div>
+      <section class="panel"><div class="panel-head"><h2>Recent trips</h2></div><div class="table-wrap"><table th:replace="~{parts :: tripTable(${trips})}"></table></div></section>
+      <section class="panel"><div class="panel-head"><h2>Changes</h2></div><table th:replace="~{parts :: changeTable(${changes})}"></table></section>
+    </div>
+    <aside>
+      <section class="panel">
+        <div class="panel-head"><h2>Edit</h2></div>
+        <form class="panel-body" method="post" th:action="@{/fleet/drivers/{id}(id=${d.id})}">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <div class="field"><label for="fn">Full name</label><input id="fn" name="fullName" th:value="${d.fullName}" required></div>
+          <div class="field"><label for="ph">Phone</label><input id="ph" name="phone" th:value="${d.phone}" required></div>
+          <div class="field"><label for="lic">Licence number</label><input id="lic" name="licenseNumber" th:value="${d.licenseNumber}" required></div>
+          <div class="field"><label for="exp">Licence valid to</label><input id="exp" name="licenseExpiry" type="date" th:value="${d.licenseExpiry}" required></div>
+          <div class="field"><label for="wh">Home warehouse</label><select id="wh" name="warehouseId"><option th:each="w : ${warehouses}" th:value="${w.id}" th:text="${w.name}" th:selected="${w.id == d.homeWarehouse.id}">w</option></select></div>
+          <div class="field"><label for="st">Status</label><select id="st" name="status"><option th:each="s : ${statuses}" th:value="${s}" th:text="${s.label()}" th:selected="${s == d.status}">s</option></select>
+            <div class="hint">Drivers go on and off trips through assignment; use this for leave or sickness.</div></div>
+          <button class="btn" type="submit">Save</button>
+        </form>
+      </section>
+    </aside>
+  </div>
+</main>
+<th:block th:replace="~{layout :: scripts}"></th:block>
+</body>
+</html>

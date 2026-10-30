@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Audit log')}"></head>
+<body>
+<header th:replace="~{layout :: header('admin')}"></header>
+<main class="page">
+  <div class="page-head"><div><h1>Admin</h1><p class="sub">Who changed what, when, with the values before and after.</p></div></div>
+  <nav th:replace="~{parts :: adminTabs(${tab})}"></nav>
+  <section class="panel">
+    <form class="filters" method="get" action="/admin/audit">
+      <div class="field"><label for="a-actor">Actor</label><select id="a-actor" name="actor"><option value="">Anyone</option>
+        <option th:each="a : ${actors}" th:value="${a}" th:text="${a}" th:selected="${a == actor}"></option></select></div>
+      <div class="field"><label for="a-type">Entity</label><select id="a-type" name="entityType"><option value="">Any</option>
+        <option th:each="t : ${types}" th:value="${t}" th:text="${@fmt.humanize(t)}" th:selected="${t == entityType}"></option></select></div>
+      <div class="field"><label for="a-id">Entity id</label><input id="a-id" name="entityId" th:value="${entityId}" style="width:100px"></div>
+      <button class="btn" type="submit">Apply</button>
+    </form>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Entity</th><th>Summary</th><th>Before → after</th></tr></thead>
+        <tbody>
+          <tr th:each="e : ${page.content}">
+            <td class="num nowrap" th:text="${@fmt.dateTime(e.occurredAt)}">t</td>
+            <td th:text="${e.actor}">a</td>
+            <td><span class="tag tag-ink" th:text="${@fmt.humanize(e.action)}">a</span></td>
+            <td class="nowrap"><a th:if="${links[e.entityType] != null and e.entityId != null}" th:href="${links[e.entityType]} + ${e.entityId}" th:text="${@fmt.humanize(e.entityType)} + ' ' + ${e.entityId}">e</a>
+              <span th:unless="${links[e.entityType] != null and e.entityId != null}" th:text="${@fmt.humanize(e.entityType)} + ' ' + (${e.entityId} ?: '')">e</span></td>
+            <td th:text="${e.summary}">s</td>
+            <td class="small"><code class="audit-json" th:if="${e.beforeJson != null}" th:text="${e.beforeJson}">b</code>
+              <th:block th:if="${e.beforeJson != null and e.afterJson != null}"> → </th:block>
+              <code class="audit-json" th:if="${e.afterJson != null}" th:text="${e.afterJson}">a</code></td>
+          </tr>
+          <tr th:if="${page.content.isEmpty()}"><td colspan="6"><div class="empty"><strong>Nothing recorded yet</strong>Plan, reassign or resolve something and it appears here.</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <nav th:replace="~{parts :: pager(${page}, '/admin/audit?' + (${actor} != null ? 'actor=' + ${actor} + '&' : '') + (${entityType} != null ? 'entityType=' + ${entityType} + '&' : '') + (${entityId} != null ? 'entityId=' + ${entityId} + '&' : ''))}"></nav>
+  </section>
+</main>
+<th:block th:replace="~{layout :: scripts}"></th:block>
+</body>
+</html>

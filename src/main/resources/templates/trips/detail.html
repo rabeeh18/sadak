@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <th:block th:replace="~{layout :: head(${trip.code})}"></th:block>
+  <th:block th:replace="~{layout :: leafletCss}"></th:block>
+</head>
+<body>
+<header th:replace="~{layout :: header('trips')}"></header>
+<main class="page">
+  <a class="back" href="/trips"><svg class="icon"><use href="/img/icons.svg#i-arrow-left"></use></svg>All trips</a>
+  <div class="page-head">
+    <div>
+      <h1><th:block th:text="${trip.code}">TR</th:block>
+        <span th:replace="~{parts :: tripStatus(${trip.status})}"></span>
+        <th:block th:if="${live != null}"><span th:replace="~{parts :: spot(${live.riskScore}, ${live.riskBand})}"></span></th:block>
+        <th:block th:if="${live == null and trip.riskScore > 0}"><span th:replace="~{parts :: spot(${trip.riskScore}, ${trip.riskBand.name()})}"></span></th:block>
+      </h1>
+      <p class="sub">
+        <th:block th:text="${trip.warehouse.name}">WH</th:block> ·
+        <span class="plate" th:text="${trip.vehicle.registration}">PB</span>
+        <th:block th:text="${trip.vehicle.type}">type</th:block> ·
+        <th:block th:text="${trip.driver.fullName}">driver</th:block>
+        (<a th:href="'tel:' + ${trip.driver.phone}" th:text="${trip.driver.phone}">phone</a>)
+      </p>
+    </div>
+    <div class="page-actions" th:if="${trip.status.isLive()}">
+      <form th:if="${trip.status.name() == 'PLANNED'}" method="post" th:action="@{/trips/{id}/start(id=${trip.id})}">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <button class="btn btn-primary" type="submit"><svg class="icon"><use href="/img/icons.svg#i-play"></use></svg>Start trip</button>
+      </form>
+      <form th:if="${trip.status.name() == 'IN_PROGRESS'}" method="post" th:action="@{/trips/{id}/recalculate(id=${trip.id})}">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <button class="btn" type="submit"><svg class="icon"><use href="/img/icons.svg#i-route"></use></svg>Recalculate route</button>
+      </form>
+      <a class="btn" href="/tower"><svg class="icon"><use href="/img/icons.svg#i-map"></use></svg>Control tower</a>
+      <form method="post" th:action="@{/trips/{id}/cancel(id=${trip.id})}" data-confirm="Cancel this trip? Undelivered shipments go back to planning.">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <input type="hidden" name="reason" value="Cancelled by dispatcher">
+        <button class="btn btn-danger" type="submit">Cancel trip</button>
+      </form>
+    </div>
+  </div>
+  <th:block th:replace="~{layout :: flash}"></th:block>
+
+  <section class="legend-strip" style="--cols:5;margin-bottom:16px">
+    <div class="legend-cell"><span class="figure" th:text="${trip.completedStopCount()} + '/' + ${trip.stops.size()}">0/0</span><span class="label">Stops done</span><span class="note" th:text="${shipmentCount} + ' shipments · ' + ${trip.totalWeightKg} + ' kg'">x</span></div>
+    <div class="legend-cell"><span class="figure" th:text="${@fmt.time(trip.plannedStart)}">--</span><span class="label">Planned start</span><span class="note" th:text="${@fmt.day(trip.plannedStart)}">day</span></div>
+    <div class="legend-cell"><span class="figure" th:text="${@fmt.time(trip.actualStart)}">--</span><span class="label">Departed</span><span class="note" th:text="${trip.actualStart != null ? @fmt.delta(@fmt.minutesBetween(trip.plannedStart, trip.actualStart).intValue()) + ' vs plan' : 'not yet'}">x</span></div>
+    <div class="legend-cell"><span class="figure" th:text="${trip.actualEnd != null ? @fmt.time(trip.actualEnd) : (live != null ? @fmt.time(live.nextEta) : @fmt.time(trip.plannedEnd))}">--</span>
+      <span class="label" th:text="${trip.actualEnd != null ? 'Finished' : (live != null ? 'Next stop ETA' : 'Planned finish')}">x</span>
+      <span class="note" th:text="${trip.actualEnd != null ? @fmt.between(trip.actualStart, trip.actualEnd) + ' on the road' : (live != null ? live.nextStop : @fmt.day(trip.plannedEnd))}">x</span></div>
+    <div class="legend-cell"><span class="figure" th:text="${trip.delayAdjustMin == 0 ? '0' : @fmt.delta(trip.delayAdjustMin)}">0</span><span class="label">Manual ETA adjustment</span><span class="note">added to every remaining ETA</span></div>
+  </section>
+
+  <div class="grid-main-side">
+    <div>
+      <section class="panel">
+        <div class="panel-head"><h2>Route</h2>
+          <span class="small muted"><span style="color:var(--survey-blue)">- - -</span> planned &nbsp; <strong>—</strong> travelled</span></div>
+        <div style="height:420px" data-trip-map th:attr="data-trip-id=${trip.id}"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Stops</h2></div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>#</th><th>Stop</th><th>Sq.</th><th>Planned</th><th>ETA / actual</th><th>Due</th><th>Shipments</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr th:each="s : ${trip.stops}" th:with="list=${byStop[s.id]}, proof=${proofByStop[s.id]}">
+                <td class="num" th:text="${s.seq}">1</td>
+                <td><strong th:text="${s.name}">name</strong><span class="sub" th:text="${s.address}">addr</span>
+                  <span class="sub" th:if="${proof != null}" th:text="'Received by ' + ${proof.recipientName} + ' at ' + ${@fmt.time(proof.capturedAt)} + (${proof.note} != null ? ' · ' + ${proof.note} : '')">proof</span></td>
+                <td><span class="grid-ref" th:text="${@fmt.grid(s.lat, s.lng)}">A1</span></td>
+                <td class="num" th:text="${@fmt.time(s.plannedArrival)}">--</td>
+                <td class="num" th:text="${s.actualArrival != null ? @fmt.time(s.actualArrival) : @fmt.time(s.eta)}">--</td>
+                <td class="num" th:text="${list != null and !list.isEmpty() ? @fmt.time(list[0].deadline) : '—'}">--</td>
+                <td><th:block th:if="${list != null}"><a th:each="sh : ${list}" th:href="@{/shipments/{id}(id=${sh.id})}" th:text="${sh.trackingNo}" style="display:block">FL</a></th:block>
+                  <span class="muted" th:if="${s.kind.name() == 'TRANSFER'}">cargo transfer</span></td>
+                <td><span class="tag" th:classappend="${s.status.name() == 'COMPLETED'} ? 'tag-green' : (${s.status.name() == 'FAILED'} ? 'tag-red' : (${s.status.name() == 'ARRIVED'} ? 'tag-blue' : 'tag-ink'))" th:text="${s.status.label()}">st</span></td>
+                <td>
+                  <details th:if="${trip.status.name() == 'IN_PROGRESS' and !s.status.isDone() and s.kind.name() == 'DELIVERY'}" class="row-actions">
+                    <summary class="btn btn-sm btn-quiet">Record</summary>
+                    <div class="row-actions-pop">
+                      <form method="post" th:action="@{/trips/{id}/stops/{sid}/complete(id=${trip.id},sid=${s.id})}">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <div class="field"><label>Received by</label><input name="recipient" required></div>
+                        <button class="btn btn-sm btn-primary" type="submit">Delivered</button>
+                      </form>
+                      <form method="post" th:action="@{/trips/{id}/stops/{sid}/fail(id=${trip.id},sid=${s.id})}" style="margin-top:10px">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <div class="field"><label>Failure reason</label>
+                          <select name="reason"><option>Recipient not available</option><option>Shop closed</option><option>Address not found</option><option>Refused by recipient</option><option>Access road blocked</option></select></div>
+                        <button class="btn btn-sm btn-danger" type="submit">Failed</button>
+                      </form>
+                    </div>
+                  </details>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" th:if="${!incidents.isEmpty()}">
+        <div class="panel-head"><h2>Incidents</h2></div>
+        <table class="data">
+          <thead><tr><th>Incident</th><th>Severity</th><th>Status</th><th>Detected</th><th>Resolution</th></tr></thead>
+          <tbody>
+            <tr th:each="i : ${incidents}" th:attr="data-href=@{/incidents/{id}(id=${i.id})}">
+              <td><a th:href="@{/incidents/{id}(id=${i.id})}" th:text="${i.code}">INC</a><span class="sub" th:text="${i.title}">t</span></td>
+              <td><span th:replace="~{parts :: severity(${i.severity})}"></span></td>
+              <td><span th:replace="~{parts :: incidentStatus(${i.status})}"></span></td>
+              <td class="num" th:text="${@fmt.when(i.detectedAt)}">t</td>
+              <td th:text="${i.resolution ?: '—'}">r</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <aside>
+      <section class="panel">
+        <div class="panel-head"><h2>Why this risk score</h2>
+          <span th:if="${live != null}" class="small muted">live</span></div>
+        <div class="panel-body">
+          <ul class="reasons" th:if="${live != null and !live.reasons.isEmpty()}">
+            <li th:each="r : ${live.reasons}"><span class="pts" th:classappend="'band-' + ${live.riskBand}" th:text="'+' + ${r.points}">+0</span>
+              <span><span class="what" th:text="${r.label}">label</span><span class="why" th:text="${r.detail}">detail</span></span></li>
+          </ul>
+          <ul class="reasons" th:if="${live == null and trip.riskReasons != null and trip.riskScore > 0}">
+            <li th:each="line : ${@fmt.reasonLines(trip.riskReasons)}"><span class="pts" th:classappend="'band-' + ${trip.riskBand.name()}" th:text="${line[0]}">+0</span><span class="why" th:text="${line[1]}">x</span></li>
+          </ul>
+          <p class="muted small" th:if="${(live != null and live.reasons.isEmpty()) or (live == null and trip.riskScore == 0)}" style="margin:0">No risk conditions recorded.</p>
+          <p class="small muted" style="margin:12px 0 0">Rule-based indicator, not a probability. Weights are set on <a href="/admin/settings">Settings</a>.</p>
+        </div>
+      </section>
+
+      <section class="panel" th:if="${trip.status.isLive()}">
+        <div class="panel-head"><h2>Reassign</h2><span class="small muted" th:text="${recommendation.remainingWeightKg} + ' kg remaining'">kg</span></div>
+        <div class="panel-body">
+          <p class="small muted" style="margin-top:0" th:if="${recommendation.candidates.isEmpty()}">No available vehicle with a free driver can take this load right now.</p>
+          <form th:each="c, it : ${recommendation.candidates}" method="post" th:action="@{/trips/{id}/reassign(id=${trip.id})}" class="candidate" th:if="${it.index < 3}">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input type="hidden" name="vehicleId" th:value="${c.vehicleId}">
+            <input type="hidden" name="driverId" th:value="${c.driverId}">
+            <input type="hidden" name="reason" value="Recommended replacement">
+            <div class="candidate-head"><span class="plate" th:text="${c.registration}">PB</span> <strong th:text="${c.driverName}">driver</strong>
+              <span class="grid-ref" th:text="${c.grid}">A1</span></div>
+            <ul class="candidate-why"><li th:each="r : ${c.reasons}" th:text="${r}">reason</li></ul>
+            <button class="btn btn-sm btn-blue" type="submit">Reassign to <th:block th:text="${c.registration}">PB</th:block></button>
+          </form>
+          <details style="margin-top:12px">
+            <summary class="small" style="cursor:pointer">Choose manually</summary>
+            <form method="post" th:action="@{/trips/{id}/reassign(id=${trip.id})}" style="margin-top:10px">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+              <div class="field"><label>Vehicle</label><select name="vehicleId">
+                <option th:value="${trip.vehicle.id}" th:text="${trip.vehicle.registration} + ' (current)'">current</option>
+                <option th:each="c : ${recommendation.candidates}" th:value="${c.vehicleId}" th:text="${c.registration} + ' · ' + ${c.capacityKg} + ' kg'">v</option></select></div>
+              <div class="field"><label>Driver</label><select name="driverId">
+                <option th:value="${trip.driver.id}" th:text="${trip.driver.fullName} + ' (current)'">current</option>
+                <option th:each="c : ${recommendation.candidates}" th:value="${c.driverId}" th:text="${c.driverName}">d</option></select></div>
+              <div class="field"><label>Reason</label><input name="reason" placeholder="e.g. Driver unwell"></div>
+              <button class="btn btn-sm" type="submit">Reassign</button>
+            </form>
+          </details>
+          <details th:if="${!recommendation.excluded.isEmpty()}" style="margin-top:8px">
+            <summary class="small muted" style="cursor:pointer" th:text="${recommendation.excluded.size()} + ' vehicles excluded'">excluded</summary>
+            <ul class="small muted"><li th:each="x : ${recommendation.excluded}" th:text="${x}">x</li></ul>
+          </details>
+        </div>
+      </section>
+
+      <section class="panel" th:if="${trip.status.isLive()}">
+        <div class="panel-head"><h2>Adjust ETA</h2></div>
+        <form class="panel-body" method="post" th:action="@{/trips/{id}/adjust(id=${trip.id})}">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <div class="form-grid" style="grid-template-columns:110px 1fr">
+            <div class="field"><label>Minutes</label><input type="number" name="minutes" th:value="${trip.delayAdjustMin}" min="-120" max="600"></div>
+            <div class="field"><label>Note</label><input name="note" placeholder="Driver reports traffic at Ladhowal"></div>
+          </div>
+          <button class="btn btn-sm" type="submit">Save adjustment</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Route versions</h2></div>
+        <ol class="timeline panel-body">
+          <li th:each="r : ${routes}" th:attr="data-state=${r.active ? 'ARRIVED' : 'COMPLETED'}"><span class="node"></span>
+            <div class="t-head"><span th:text="'v' + ${r.versionNo} + (${r.active} ? ' · active' : '')">v1</span><span class="small muted" th:text="${@fmt.km(r.distanceM)}">km</span></div>
+            <div class="t-meta" th:text="${r.reason} + ' · ' + ${@fmt.when(r.createdAt)} + ' · ' + (${r.createdBy} ?: 'system') + (${r.estimated} ? ' · straight-line estimate' : '')">meta</div></li>
+          <li th:if="${routes.isEmpty()}" class="muted small">Route geometry is not stored for historical trips.</li>
+        </ol>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Assignments</h2></div>
+        <ol class="timeline panel-body">
+          <li th:each="a : ${assignments}" data-state="COMPLETED"><span class="node"></span>
+            <div class="t-head"><span><span class="plate" th:text="${a.vehicle.registration}">PB</span> <th:block th:text="${a.driver.fullName}">d</th:block></span></div>
+            <div class="t-meta" th:text="${a.reason} + ' · ' + ${@fmt.when(a.assignedAt)} + ' · ' + (${a.assignedBy} ?: 'system')">meta</div></li>
+        </ol>
+      </section>
+
+      <section class="panel" th:if="${!riskHistory.isEmpty()}">
+        <div class="panel-head"><h2>Risk history</h2></div>
+        <table class="data"><tbody>
+          <tr th:each="e : ${riskHistory}"><td class="num" th:text="${@fmt.time(e.evaluatedAt)}">t</td>
+            <td><span th:replace="~{parts :: spot(${e.score}, ${e.band.name()})}"></span></td>
+            <td class="small" th:text="${@fmt.firstLine(e.reasons)}">r</td></tr>
+        </tbody></table>
+      </section>
+    </aside>
+  </div>
+</main>
+<th:block th:replace="~{layout :: scripts}"></th:block>
+<th:block th:replace="~{layout :: leafletJs}"></th:block>
+<script src="/js/trip-map.js"></script>
+</body>
+</html>

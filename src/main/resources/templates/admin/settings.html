@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Risk rules')}"></head>
+<body>
+<header th:replace="~{layout :: header('admin')}"></header>
+<main class="page">
+  <div class="page-head"><div><h1>Admin</h1><p class="sub">Every change here is recorded in the audit log and takes effect on the next monitoring cycle.</p></div></div>
+  <nav th:replace="~{parts :: adminTabs(${tab})}"></nav>
+  <th:block th:replace="~{layout :: flash}"></th:block>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Risk rules</h2><span class="small muted">A trip's score is the sum of the points of every rule whose condition holds, capped at 100.</span></div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Rule</th><th>When it applies</th><th class="r">Points</th><th class="r">Threshold</th><th>On</th><th></th><th>Last change</th></tr></thead>
+        <tbody>
+          <tr th:each="r : ${rules}">
+            <td><strong th:text="${r.label}">label</strong><span class="sub" th:text="${r.code}">CODE</span></td>
+            <td class="small" style="max-width:420px" th:text="${r.description}">desc</td>
+            <td colspan="4">
+              <form method="post" th:action="@{/admin/rules/{c}(c=${r.code})}" class="rule-form">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <input type="number" name="points" th:value="${r.points}" min="0" max="100" aria-label="Points" style="width:76px">
+                <span th:if="${r.threshold != null}" class="rule-threshold"><input type="number" name="threshold" step="0.1" min="0" th:value="${r.threshold}" aria-label="Threshold" style="width:90px"> <span class="small muted" th:text="${r.unit}">unit</span></span>
+                <span th:if="${r.threshold == null}" class="rule-threshold small muted">—</span>
+                <label class="check" style="margin:0"><input type="checkbox" name="enabled" value="true" th:checked="${r.enabled}"> <span class="sr-only">Enabled</span></label>
+                <button class="btn btn-sm" type="submit">Save</button>
+              </form>
+            </td>
+            <td class="small muted" th:text="${r.updatedBy != null ? r.updatedBy + ' · ' + @fmt.when(r.updatedAt) : 'default'}">x</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Thresholds and tracking</h2></div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Setting</th><th>What it does</th><th>Value</th><th>Last change</th></tr></thead>
+        <tbody>
+          <tr th:each="s : ${settings}">
+            <td><strong th:text="${s.label}">label</strong><span class="sub" th:text="${s.key}">key</span></td>
+            <td class="small" th:text="${s.description}">desc</td>
+            <td><form method="post" th:action="@{/admin/settings/{k}(k=${s.key})}" class="btn-row">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+              <input name="value" th:value="${s.value}" style="width:110px" th:attr="aria-label=${s.label}">
+              <button class="btn btn-sm" type="submit">Save</button></form></td>
+            <td class="small muted" th:text="${s.updatedBy != null ? s.updatedBy + ' · ' + @fmt.when(s.updatedAt) : 'default'}">x</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<th:block th:replace="~{layout :: scripts}"></th:block>
+</body>
+</html>

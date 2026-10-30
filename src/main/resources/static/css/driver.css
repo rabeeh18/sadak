@@ -1,0 +1,44 @@
+/* Driver app: one-handed, outdoors, on a phone. Big targets, high contrast, the next action first. */
+.driver-body { background: var(--ground); }
+.drv-top {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 16px; background: var(--ink); color: var(--paper);
+}
+.drv-top .sheet-title { font-size: 13px; display: block; }
+.drv-who { font-size: 13px; opacity: .8; }
+.drv-link { background: none; border: 0; color: inherit; font: 600 14px var(--font); text-decoration: underline; padding: 8px 0; cursor: pointer; }
+.drv-top .drv-link { color: var(--paper); }
+.drv { max-width: 560px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.drv .flash { margin: 0; }
+.drv-empty { text-align: center; padding: 48px 16px; }
+.drv-empty h1 { margin: 12px 0 6px; font-size: 22px; }
+.drv-trip { padding: 4px 0; }
+.drv-trip-head { display: flex; align-items: center; justify-content: space-between; }
+.drv-trip-head h1 { font-size: 28px; font-weight: 800; font-variation-settings: "wdth" 90; }
+.drv-meta { color: var(--ink-2); margin: 4px 0 8px; }
+.drv-card { background: var(--paper); border: 1px solid var(--rule); padding: 16px; }
+.drv-card h2 { font-size: 20px; margin: 4px 0 8px; }
+.drv-next { border-width: 2px; }
+.drv-address { color: var(--ink-2); margin: 0 0 12px; }
+.drv-times { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--rule-soft); border-bottom: 1px solid var(--rule-soft); margin-bottom: 12px; }
+.drv-times div { padding: 10px 0; }
+.drv-times .figure { display: block; font-size: 26px; }
+.drv-times span:last-child { font-size: 12px; color: var(--ink-3); }
+.drv-parcels { list-style: none; margin: 0 0 12px; padding: 0; }
+.drv-parcels li { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; padding: 6px 0; border-bottom: 1px dotted var(--rule-soft); font-size: 14px; }
+.drv-parcels .drv-link { margin-left: auto; color: var(--survey-blue); }
+.drv-note { background: var(--ochre-tint); padding: 8px 10px; font-size: 14px; }
+.drv-proof { margin-top: 12px; }
+.drv-proof input, .drv-fail select, .drv-card input { min-height: 48px; font-size: 16px; margin-bottom: 10px; }
+.drv-btn {
+  display: block; width: 100%; min-height: 56px; margin-top: 4px;
+  border: 2px solid var(--ink); background: var(--paper); color: var(--ink);
+  font: 700 17px var(--font); cursor: pointer;
+}
+.drv-btn:active { transform: translateY(1px); }
+.drv-primary { background: var(--ink); color: var(--paper); }
+.drv-danger { border-color: var(--road); color: var(--road); }
+.drv-fail { margin-top: 12px; }
+.drv-fail summary { padding: 12px 0; font-weight: 600; color: var(--road); }
+.drv-share { margin-top: 14px; font-size: 15px; }
