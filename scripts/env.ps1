@@ -1,16 +1,16 @@
-# Dot-source to point the current PowerShell session at the project's tools:
+# Dot-source to prepare the current PowerShell session:
 #   . .\scripts\env.ps1
-# Only affects this session; no system or user settings are changed.
+# Finds the installed JDK 21 and PostgreSQL 17 and loads .env.local. Changes nothing outside this session.
 
-$DevRoot = 'D:\Dev'
-$env:JAVA_HOME = Join-Path $DevRoot 'jdk-21'
-$env:PGHOME = Join-Path $DevRoot 'pgsql'
-$env:PGDATA = Join-Path $env:PGHOME 'data'
-$env:PATH = "$env:JAVA_HOME\bin;$env:PGHOME\bin;$env:PATH"
-# Keep the Maven Wrapper's own download on D: as well (the repository is set in .mvn/maven.config).
-$env:MAVEN_USER_HOME = Join-Path $DevRoot 'm2'
+# JAVA_HOME is set system-wide by the JDK installer; pick it up even in a shell opened before the install.
+if (-not $env:JAVA_HOME) { $env:JAVA_HOME = [Environment]::GetEnvironmentVariable('JAVA_HOME', 'Machine') }
+if ($env:JAVA_HOME) { $env:PATH = "$(Join-Path $env:JAVA_HOME 'bin');$env:PATH" }
 
-# Load local credentials (FLEET_DB_*, PG_SUPERUSER*) into the session.
+# PostgreSQL's installer does not add psql to PATH.
+$pgBin = 'C:\Program Files\PostgreSQL\17\bin'
+if (Test-Path $pgBin) { $env:PATH = "$pgBin;$env:PATH" }
+
+# Load local credentials (FLEET_DB_*, PG_SUPERUSER*, FLEET_DEMO_PASSWORD) into the session.
 $envFile = Join-Path $PSScriptRoot '..\.env.local'
 if (Test-Path $envFile) {
     Get-Content $envFile | Where-Object { $_ -match '^\s*[^#].*=' } | ForEach-Object {
@@ -18,5 +18,5 @@ if (Test-Path $envFile) {
         Set-Item -Path "env:$($name.Trim())" -Value $value.Trim()
     }
 }
-$env:PGPORT = $env:FLEET_DB_PORT
 $env:PGHOST = $env:FLEET_DB_HOST
+$env:PGPORT = $env:FLEET_DB_PORT

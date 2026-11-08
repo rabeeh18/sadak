@@ -23,7 +23,7 @@ This document refines `implementation_plan.md` (the original vision, kept unchan
 | Architecture | Modular monolith, Java 21 + Spring Boot (current release line, confirmed at project creation) |
 | Frontend | Thymeleaf + Bootstrap 5 + plain JavaScript; Leaflet for maps; Chart.js for charts. No Node.js |
 | Real-time | Spring WebSocket/STOMP, with per-topic authorization |
-| Database | PostgreSQL 17 (portable install, `D:\Dev\pgsql`, port 5433), Flyway migrations |
+| Database | PostgreSQL 17 (standard install as a Windows service, port 5432), Flyway migrations |
 | Routing | Public OSRM server, called **once per route plan** and cached in the database; straight-line + average-speed fallback |
 | Footprint | No Docker, no self-hosted OSRM, no Testcontainers. Target under ~1 GB RAM total while running |
 | Customers | Public tracking page only (tracking number + delivery PIN code). No customer accounts in v1 |
@@ -36,12 +36,12 @@ This document refines `implementation_plan.md` (the original vision, kept unchan
 
 | Item | Location |
 |---|---|
-| JDK 21 | `D:\Dev\jdk-21` |
-| PostgreSQL 17.11 | `D:\Dev\pgsql`, data in `D:\Dev\pgsql\data`, port **5433** |
-| Maven | Maven Wrapper in the project; local repository at `D:\Dev\m2` |
+| JDK 21 | Standard install, `JAVA_HOME` set by the installer |
+| PostgreSQL 17 | Standard install, Windows service `postgresql-x64-17`, port **5432** |
+| Maven | Maven Wrapper in the project; default local repository (`~/.m2`) |
 | Databases | `fleet` (app) and `fleet_test` (integration tests), owned by role `fleet` |
 | Credentials | `.env.local` (gitignored) |
-| Session setup | `. .\scripts\env.ps1`, then `scripts\start-db.ps1` |
+| Session setup | `. .\scripts\env.ps1` |
 
 ---
 

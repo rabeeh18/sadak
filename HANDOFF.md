@@ -36,16 +36,14 @@ Read this first when picking the project up on a fresh machine. `README.md` cove
 
 ## Setup on a fresh machine
 
-Tools live in `D:\Dev`, installed from portable zips, with no admin rights or PATH changes. `.mvn/maven.config` and `scripts/env.ps1` expect these paths.
+Standard installs, no fixed folders: clone the repo anywhere.
 
-1. Clone to `D:\Projects\Fleet`.
-2. Unzip Temurin JDK 21 to `D:\Dev\jdk-21`, and the PostgreSQL 17 Windows binaries to `D:\Dev\pgsql` (the pgAdmin folder can be deleted).
-3. Create the database cluster in `D:\Dev\pgsql\data` with `initdb -U postgres -A scram-sha-256 -E UTF8 --locale=C --pwfile=<file>`. In `postgresql.conf`, set `listen_addresses = 'localhost'` and `port = 5433`.
-4. Create `.env.local` in the project root (it is gitignored, so generate new passwords):
+1. Install JDK 21: `winget install Microsoft.OpenJDK.21` (sets `JAVA_HOME`).
+2. Create `.env.local` in the project root (it is gitignored, so generate new passwords):
 
    ```
    FLEET_DB_HOST=localhost
-   FLEET_DB_PORT=5433
+   FLEET_DB_PORT=5432
    FLEET_DB_NAME=fleet
    FLEET_DB_USER=fleet
    FLEET_DB_PASSWORD=<new>
@@ -54,11 +52,12 @@ Tools live in `D:\Dev`, installed from portable zips, with no admin rights or PA
    FLEET_DEMO_PASSWORD=<new>
    ```
 
-   Then run `scripts/start-db.ps1` and create the role `fleet` plus the databases `fleet` and `fleet_test`, both owned by that role.
-5. If local tool folders are restored into the project, list them in `.git/info/exclude` (not `.gitignore`) so they never get committed.
-6. Run `scripts/run.ps1`. The app is at <http://localhost:8080>; the first start seeds the demo. Tests: `.\mvnw.cmd test` after `. .\scripts\env.ps1`.
+3. Install PostgreSQL 17 as a Windows service, using the superuser password from `.env.local`:
+   `winget install PostgreSQL.PostgreSQL.17 --override "--mode unattended --unattendedmodeui none --superpassword <PG_SUPERUSER_PASSWORD> --serverport 5432 --disable-components stackbuilder,pgAdmin"`
+4. After `. .\scripts\env.ps1`, create the role `fleet` (password `FLEET_DB_PASSWORD`) plus the databases `fleet` and `fleet_test`, both owned by that role, with `psql -U postgres`.
+5. Run `scripts/run.ps1`. The app is at <http://localhost:8080>; the first start seeds the demo. Tests: `.\mvnw.cmd test` after `. .\scripts\env.ps1`.
 
-Port 5432 was avoided because another project's Docker database used it. Port 8080 must be free.
+Ports 5432 and 8080 must be free.
 
 ## Useful to know
 

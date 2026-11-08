@@ -12,13 +12,13 @@ Java 21 · Spring Boot 4.1 · Thymeleaf · Leaflet · STOMP over WebSocket · Po
 
 ## Run it
 
-Requirements, installed portably under `D:\Dev` (no admin rights, no Docker):
+Requirements (standard installs, no Docker):
 
-| Tool | Location |
+| Tool | How |
 |---|---|
-| JDK 21 (Temurin) | `D:\Dev\jdk-21` |
-| PostgreSQL 17 | `D:\Dev\pgsql`, data in `D:\Dev\pgsql\data`, port **5433** |
-| Maven | via the Maven Wrapper; libraries in `D:\Dev\m2` |
+| JDK 21 | `winget install Microsoft.OpenJDK.21` (any JDK 21 with `JAVA_HOME` set works) |
+| PostgreSQL 17 | `winget install PostgreSQL.PostgreSQL.17`: runs as a Windows service on port **5432** |
+| Maven | nothing to install: the Maven Wrapper downloads it |
 
 Credentials live in `.env.local` (gitignored): database user, superuser, and the demo users' password (`FLEET_DEMO_PASSWORD`).
 
@@ -26,13 +26,12 @@ Credentials live in `.env.local` (gitignored): database user, superuser, and the
 powershell -ExecutionPolicy Bypass -File scripts/run.ps1
 ```
 
-This starts PostgreSQL if needed, then the app on <http://localhost:8080>. The first start migrates the schema and seeds the demo (about 15 seconds). On the sign-in page, choose **Dispatcher**, **Admin** or **Driver (phone view)** to look around without a password.
+This checks that the PostgreSQL service is running, then starts the app on <http://localhost:8080>. The first start migrates the schema and seeds the demo (about 15 seconds). On the sign-in page, choose **Dispatcher**, **Admin** or **Driver (phone view)** to look around without a password.
 
 | Script | What it does |
 |---|---|
-| `scripts/env.ps1` | Points the current PowerShell session at the JDK, PostgreSQL and `.env.local` |
-| `scripts/start-db.ps1` / `stop-db.ps1` | Starts / stops the local PostgreSQL |
-| `scripts/run.ps1` | Database + app |
+| `scripts/env.ps1` | Puts the JDK and `psql` on the current PowerShell session's PATH and loads `.env.local` |
+| `scripts/run.ps1` | Starts the app |
 | `scripts/reset-db.ps1` | Drops and recreates the database; the next start re-seeds the demo (stop the app first) |
 | `scripts/smoke-test.ps1` | Signs in and requests every main page |
 
