@@ -1,6 +1,7 @@
 package com.fleetops.shipment;
 
 import java.time.Instant;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -81,6 +82,35 @@ public class ShipmentService {
         history.record(StatusHistoryService.SHIPMENT, shipmentId, old, ShipmentStatus.CANCELLED, reason);
         audit.record("SHIPMENT_CANCELLED", "SHIPMENT", shipmentId, s.getTrackingNo() + " cancelled"
             + (reason == null || reason.isBlank() ? "" : ": " + reason));
+    }
+
+    /**
+     * The customers of a trip's late parcels are given a new promised time: their current ETA,
+     * rounded up to the next quarter hour. The tracking page then shows the new time.
+     * Returns a short summary, for example "FL4122131 now due 13:45".
+     */
+    @Transactional
+    public List<String> newPromisedTimes(long tripId, int lateFromMin, java.time.ZoneId zone) {
+        List<String> changed = new java.util.ArrayList<>();
+        for (Shipment s : shipments.findByTripIdOrderByIdAsc(tripId)) {
+            if (s.getStatus().isFinal() || s.getStop() == null || s.getStop().getEta() == null) {
+                continue;
+            }
+            java.time.Instant eta = s.getStop().getEta();
+            if (java.time.Duration.between(s.getDeadline(), eta).toMinutes() < lateFromMin) {
+                continue;
+            }
+            java.time.ZonedDateTime local = eta.atZone(zone).truncatedTo(java.time.temporal.ChronoUnit.MINUTES);
+            int add = (15 - local.getMinute() % 15) % 15;
+            java.time.Instant promised = local.plusMinutes(add == 0 ? 15 : add).toInstant();
+            java.time.Instant before = s.getDeadline();
+            s.changeDeadline(promised);
+            String time = promised.atZone(zone).toLocalTime().toString();
+            audit.record("SHIPMENT_NEW_TIME", "SHIPMENT", s.getId(), s.getTrackingNo() + " customer given a new time: " + time,
+                com.fleetops.audit.AuditFields.of("deadline", before), com.fleetops.audit.AuditFields.of("deadline", promised));
+            changed.add(s.getTrackingNo() + " now due " + time);
+        }
+        return changed;
     }
 
     @Transactional(readOnly = true)

@@ -1,10 +1,9 @@
 package com.fleetops.incident;
 
 public enum IncidentStatus {
-    DETECTED("Detected"),
-    ACKNOWLEDGED("Acknowledged"),
-    IN_PROGRESS("Action in progress"),
-    RESOLVED("Resolved");
+    DETECTED("Open"),
+    IN_PROGRESS("Being handled"),
+    RESOLVED("Closed");
 
     private final String label;
 

@@ -25,6 +25,8 @@ import com.fleetops.trip.TripService;
 public class LocationIngestionService {
 
     private static final Logger log = LoggerFactory.getLogger(LocationIngestionService.class);
+    /** Within this distance of the route, a vehicle counts as on it for its heading. */
+    private static final double ON_ROUTE_M = 60;
 
     /** Latest fix per vehicle, including vehicles not on a trip. */
     public record Fix(long vehicleId, GeoPoint position, double speedKph, double heading, Instant at) {
@@ -56,8 +58,14 @@ public class LocationIngestionService {
         if (lt != null) {
             synchronized (lt) {
                 GeoPoint previous = lt.position();
-                heading = previous != null && previous.distanceTo(position) > 3 ? previous.bearingTo(position) : lt.heading();
                 RouteLine.Projection p = lt.route.project(position, lt.progress());
+                // On the route, the arrow follows the road at that spot. The line between two fixes
+                // cuts across bends and, after a restart, starts from an old saved point.
+                if (p.offsetMeters() <= ON_ROUTE_M) {
+                    heading = lt.route.locate(p.distanceAlong()).bearing();
+                } else {
+                    heading = previous != null && previous.distanceTo(position) > 15 ? previous.bearingTo(position) : lt.heading();
+                }
                 double speed = speedKph != null ? speedKph : estimateSpeed(lt, position, when);
                 lt.applyFix(position, p.distanceAlong(), p.offsetMeters(), speed, heading, when);
                 LiveTrip.OpenStop next = lt.nextStop();
@@ -95,6 +103,12 @@ public class LocationIngestionService {
             return lt.speedKph();
         }
         return lt.position().distanceTo(position) / seconds * 3.6;
+    }
+
+    /** Demo reset: forget every vehicle's last position. */
+    public void forgetAll() {
+        latest.clear();
+        lastStored.clear();
     }
 
     public Map<Long, Fix> latestFixes() {

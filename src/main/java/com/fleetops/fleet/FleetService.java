@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fleetops.audit.AuditFields;
 import com.fleetops.audit.AuditService;
 import com.fleetops.common.time.OperationalClock;
+import com.fleetops.config.AppMode;
 import com.fleetops.common.web.BusinessRuleException;
 import com.fleetops.common.web.NotFoundException;
 import com.fleetops.security.CurrentUser;
@@ -27,10 +28,11 @@ public class FleetService {
     private final AuditService audit;
     private final OperationalClock clock;
     private final ZoneId zone;
+    private final AppMode mode;
 
     public FleetService(WarehouseRepository warehouses, VehicleRepository vehicles, DriverRepository drivers,
                         MaintenanceRepository maintenance, AuditService audit, OperationalClock clock,
-                        @Value("${fleet.display-zone}") String zone) {
+                        @Value("${fleet.display-zone}") String zone, AppMode mode) {
         this.warehouses = warehouses;
         this.vehicles = vehicles;
         this.drivers = drivers;
@@ -38,6 +40,7 @@ public class FleetService {
         this.audit = audit;
         this.clock = clock;
         this.zone = ZoneId.of(zone);
+        this.mode = mode;
     }
 
     // ------------------------------------------------------------------ warehouses
@@ -62,6 +65,26 @@ public class FleetService {
             AuditFields.of("name", name, "city", city, "lat", lat, "lng", lng, "active", active));
     }
 
+    /** The desk number and hours customers see; blank phone clears them. */
+    @Transactional
+    public void updateWarehouseDesk(long id, String phone, java.time.LocalTime opens, java.time.LocalTime closes) {
+        Warehouse w = warehouse(id);
+        String number = phone == null ? "" : phone.strip();
+        if (number.isEmpty()) {
+            w.updateDesk(null, null, null);
+        } else {
+            if (!number.matches("[+0-9][0-9 -]{5,18}")) {
+                throw new BusinessRuleException("Enter the desk phone number, for example 0175 230 1234");
+            }
+            if (opens == null || closes == null || !closes.isAfter(opens)) {
+                throw new BusinessRuleException("Give desk hours, closing after opening");
+            }
+            w.updateDesk(number, opens, closes);
+        }
+        audit.record("WAREHOUSE_DESK_UPDATED", "WAREHOUSE", id, w.getName() + " desk: "
+            + (number.isEmpty() ? "removed" : number + ", " + opens + "–" + closes));
+    }
+
     @Transactional(readOnly = true)
     public Warehouse warehouse(long id) {
         return warehouses.findById(id).orElseThrow(() -> new NotFoundException("Warehouse", id));
@@ -76,6 +99,9 @@ public class FleetService {
             throw new BusinessRuleException("Vehicle " + reg + " is already registered");
         }
         Vehicle v = vehicles.save(new Vehicle(reg, type.trim(), capacityKg, warehouse(warehouseId)));
+        if (!mode.demo()) {
+            v.update(v.getType(), v.getCapacityKg(), v.getHomeWarehouse(), false); // production vehicles report real GPS
+        }
         audit.record("VEHICLE_CREATED", "VEHICLE", v.getId(), "Vehicle " + reg + " registered");
         return v;
     }

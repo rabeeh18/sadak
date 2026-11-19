@@ -146,7 +146,7 @@
     const onTime = root.querySelector('[data-kpi-note="onTime"]');
     if (onTime) onTime.textContent = k.onTimeToday === null ? 'No deliveries yet' : `${k.onTimeToday}% on time`;
     root.querySelector('[data-tone-for="atRisk"]').dataset.tone = k.atRisk > 0 ? 'warn' : '';
-    root.querySelector('[data-tone-for="openIncidents"]').dataset.tone = k.criticalIncidents > 0 ? 'alert' : (k.openIncidents > 0 ? 'warn' : '');
+    root.querySelector('[data-tone-for="openIncidents"]').dataset.tone = k.unhandledIncidents > 0 ? 'alert' : (k.openIncidents > 0 ? 'warn' : '');
   }
 
   // ------------------------------------------------------------------ side list
@@ -158,7 +158,8 @@
   }));
 
   function renderTrips() {
-    const rows = [...state.trips.values()].sort((a, b) => b.riskScore - a.riskScore || a.code.localeCompare(b.code));
+    const rank = { HIGH: 2, CRITICAL: 2, MEDIUM: 1, LOW: 0 };
+    const rows = [...state.trips.values()].sort((a, b) => (rank[b.riskBand] - rank[a.riskBand]) || b.riskScore - a.riskScore || a.code.localeCompare(b.code));
     root.querySelector('[data-trip-count]').textContent = rows.length;
     const body = root.querySelector('[data-trip-rows]');
     if (rows.length === 0) {
@@ -169,7 +170,7 @@
       const dev = t.lateMin ? `<span class="dev late">+${t.lateMin} min late</span>` : `<span class="dev">${esc(fmtDelta(t.deviationMin))}</span>`;
       const cond = esc(t.condition).replace(/ /g, '-');
       return `<tr data-trip="${t.tripId}" aria-selected="${state.selected === t.tripId}">
-        <td>${spot(t.riskScore, t.riskBand)}</td>
+        <td>${spot(t.riskScore, t.riskBand)}${t.reasons && t.reasons.length ? `<span class="sub">${esc(t.reasons[0].label)}</span>` : ''}</td>
         <td><span class="code">${esc(t.code)}</span> <span class="plate" style="font-size:10px;padding:0 4px">${esc(t.registration.slice(-7))}</span>
             <span class="route">${esc(t.route)}</span></td>
         <td class="r">${dev}<span class="sub">${t.stopsDone}/${t.stopsTotal} stops</span></td>
@@ -192,9 +193,9 @@
       return;
     }
     ul.innerHTML = state.incidents.map(i => `<li><a href="/incidents/${i.id}">
-        <span class="sev"><span class="tag ${sevTag(i.severity)}">${esc(i.severity.toLowerCase())}</span></span>
-        <span class="title">${esc(i.title)}</span>
-        <span class="meta">${esc(i.code)} · ${esc(i.typeLabel)} · ${esc(i.statusLabel)}${i.owner ? ' · ' + esc(i.owner) : ''}</span>
+        <span class="sev"><span class="tag ${statusTag(i.status)}">${esc(i.statusLabel)}</span></span>
+        <span class="title"><b>${esc(i.typeLabel)}</b> · ${esc(i.title)}</span>
+        <span class="meta">${esc(i.tripCode || '')} · main fix: ${esc(i.fix)}${i.owner ? ' · ' + esc(i.owner) : ''}</span>
       </a></li>`).join('');
   }
 
@@ -205,7 +206,7 @@
       <td>${esc(v.statusLabel)}</td><td>${esc(v.warehouse)}</td></tr>`).join('');
   }
 
-  const sevTag = s => ({ CRITICAL: 'tag-solid-red', HIGH: 'tag-orange', MEDIUM: 'tag-ochre', LOW: 'tag-ink' }[s] || 'tag-ink');
+  const statusTag = s => ({ DETECTED: 'tag-red', IN_PROGRESS: 'tag-ochre', RESOLVED: 'tag-green' }[s] || 'tag-ink');
 
   // ------------------------------------------------------------------ selection
 
@@ -282,35 +283,29 @@
     const live = d.status === 'IN_PROGRESS';
     const nextIdx = d.stops.findIndex(s => s.status === 'PENDING' || s.status === 'ARRIVED');
     const scen = d.scenario;
-    const reasons = t && t.reasons && t.reasons.length
-      ? `<ul class="reasons">${t.reasons.map(r => `<li><span class="pts band-${t.riskBand}">+${r.points}</span><span><span class="what">${esc(r.label)}</span><span class="why">${esc(r.detail)}</span></span></li>`).join('')}</ul>`
-      : '<p class="muted small" style="margin:0">No risk conditions. Every rule is checked every few seconds.</p>';
+    const reasons = whatsWrong(t);
 
     detailEl.innerHTML = `
       <div class="detail-head" data-detail-head></div>
       <div class="detail-body">
         <div class="detail-facts" data-detail-facts></div>
         <section class="detail-section">
-          <h3 class="caps">Why this score</h3>
+          <h3 class="caps">What's wrong</h3>
           <div data-reasons>${reasons}</div>
+          ${d.incidents.map(i => incidentCard(i, d)).join('')}
+          ${t ? `<p class="small muted" style="margin:10px 0 0">Risk points ${t.riskScore} · checked every few seconds</p>` : ''}
         </section>
-        ${live ? `<section class="detail-section">
-          <h3 class="caps">Simulate a disruption</h3>
+        ${live && d.simulated ? `<section class="detail-section">
+          <h3 class="caps">Simulate a problem</h3>
           <div class="sim-controls">
             <button class="btn" data-scenario="SLOW" aria-pressed="${scen === 'SLOW'}">${icon('snail')}Slow down</button>
-            <button class="btn" data-scenario="EXTEND_STOP">${icon('timer')}Stop +20 min</button>
+            <button class="btn" data-scenario="EXTEND_STOP">${icon('timer')}Stuck 20 min</button>
             <button class="btn" data-scenario="DETOUR" aria-pressed="${scen === 'DETOUR'}">${icon('signpost')}Detour</button>
-            <button class="btn" data-scenario="SILENT" aria-pressed="${scen === 'SILENT'}">${icon('wifi-off')}Go silent</button>
+            <button class="btn" data-scenario="SILENT" aria-pressed="${scen === 'SILENT'}">${icon('wifi-off')}GPS lost</button>
             <button class="btn btn-danger" data-scenario="BREAKDOWN" aria-pressed="${scen === 'BREAKDOWN'}">${icon('wrench')}Breakdown</button>
-            <button class="btn btn-quiet" data-scenario="NORMAL">${icon('refresh-cw')}Normal</button>
+            <button class="btn btn-quiet" data-scenario="NORMAL">${icon('refresh-cw')}Back to normal</button>
           </div>
           ${d.extraDwellMin ? `<p class="small muted" style="margin:8px 0 0">Next stop will take ${d.extraDwellMin} min longer.</p>` : ''}
-        </section>` : ''}
-        ${d.incidents.length ? `<section class="detail-section">
-          <h3 class="caps">Open incidents</h3>
-          <ul class="incident-feed">${d.incidents.map(i => `<li><a href="/incidents/${i.id}" style="padding:8px 0">
-            <span class="sev"><span class="tag ${sevTag(i.severity)}">${esc(i.severity.toLowerCase())}</span></span>
-            <span class="title">${esc(i.title)}</span><span class="meta">${esc(i.code)} · ${esc(i.statusLabel)}</span></a></li>`).join('')}</ul>
         </section>` : ''}
         <section class="detail-section">
           <h3 class="caps">Stops</h3>
@@ -333,6 +328,68 @@
     renderDetailHeader();
     detailEl.querySelector('[data-back]').addEventListener('click', deselect);
     detailEl.querySelectorAll('[data-scenario]').forEach(b => b.addEventListener('click', () => runScenario(b.dataset.scenario)));
+    wireIncidentCards();
+  }
+
+  /** "What's wrong": red problems need action, yellow ones are heads-ups. */
+  function whatsWrong(t) {
+    if (!t || !t.reasons || !t.reasons.length) {
+      return '<p class="muted small" style="margin:0">Nothing. On its road, on time, GPS reporting.</p>';
+    }
+    return `<ul class="reasons">${t.reasons.map(r => `<li>
+      <span class="pts ${r.watch ? 'band-MEDIUM' : 'band-HIGH'}" title="${r.watch ? 'Heads-up' : 'Needs action'}">+${r.points}</span>
+      <span><span class="what">${esc(r.label)}</span><span class="why">${esc(r.detail)}</span></span></li>`).join('')}</ul>`;
+  }
+
+  /** An open incident on this trip, with its one main fix. */
+  function incidentCard(i, d) {
+    const taken = i.status === 'IN_PROGRESS';
+    let main;
+    if (i.type === 'SLA_RISK') {
+      main = `<button class="btn btn-sm btn-danger" data-fix="/incidents/${i.id}/new-time">${esc(i.fix)}</button>`;
+    } else if (i.type === 'BREAKDOWN') {
+      main = `<button class="btn btn-sm btn-danger" data-fix="/incidents/${i.id}/send-replacement">${esc(i.fix)}</button>`;
+    } else {
+      main = `<a class="btn btn-sm btn-danger" href="tel:${esc(d.driver.phone)}">${icon('phone')}${esc(i.fix)}</a>`;
+    }
+    const call = i.callsDriver ? `<form class="inc-note" data-called="/incidents/${i.id}/called">
+        <input type="text" name="note" required placeholder="What did the driver say?" aria-label="What the driver said">
+        <button class="btn btn-sm btn-quiet" type="submit">Close</button></form>` : '';
+    return `<div class="inc-card${taken ? ' is-taken' : ''}">
+      <div class="inc-top"><span class="caps">${esc(i.typeLabel)}</span><span class="tag ${statusTag(i.status)}">${esc(i.statusLabel)}</span></div>
+      <p>${esc(i.title)}</p>
+      <div class="btn-row">${main}
+        ${taken ? '' : `<button class="btn btn-sm btn-quiet" data-fix="/incidents/${i.id}/acknowledge">I'm on it</button>`}
+        <a class="btn btn-sm btn-quiet" href="/incidents/${i.id}">More</a></div>
+      ${call}
+    </div>`;
+  }
+
+  function wireIncidentCards() {
+    detailEl.querySelectorAll('[data-fix]').forEach(b => b.addEventListener('click', () => fix(b.dataset.fix, {})));
+    detailEl.querySelectorAll('[data-called]').forEach(f => f.addEventListener('submit', e => {
+      e.preventDefault();
+      fix(f.dataset.called, { note: f.elements.note.value });
+    }));
+  }
+
+  /** Runs an incident's fix (a normal form post) without leaving the map. */
+  async function fix(url, fields) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded', [Fleet.csrfHeader]: Fleet.csrfToken },
+        body: new URLSearchParams(Object.assign({ back: '/tower' }, fields))
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || 'Request failed (' + res.status + ')');
+      }
+      toast('Done', state.detail?.code);
+      await refreshDetail(false);
+    } catch (e) {
+      toast('Could not do that', e.message, 'HIGH');
+    }
   }
 
   function renderDetailHeader() {
@@ -347,7 +404,7 @@
         <h2>${esc(d.code)} <span class="plate">${esc(d.vehicle.registration)}</span></h2>
         <div class="route">${esc(d.warehouse.name)} · ${esc(d.driver.name)} · <a href="tel:${esc(d.driver.phone)}">${esc(d.driver.phone)}</a></div>
       </div>
-      <div style="text-align:right">${t ? spot(t.riskScore, t.riskBand) : ''}<div class="small muted">${t ? esc(t.riskBand.toLowerCase()) + ' risk' : esc(d.status)}</div></div>`;
+      <div style="text-align:right">${t ? spot(t.riskScore, t.riskBand) : `<span class="small muted">${esc(d.status)}</span>`}</div>`;
     if (t) {
       facts.innerHTML = `
         <div><span class="figure">${t.stopsDone}<small>/${t.stopsTotal}</small></span><span class="label">stops done</span></div>
@@ -355,9 +412,7 @@
         <div><span class="figure ${t.lateMin ? 'band-CRITICAL' : ''}">${t.lateMin ? '+' + t.lateMin : esc(fmtDelta(t.deviationMin).replace(' min', ''))}</span><span class="label">${t.lateMin ? 'min past deadline' : 'min vs plan'} · pace ×${t.pace}</span></div>`;
       const reasons = detailEl.querySelector('[data-reasons]');
       if (reasons && t.reasons) {
-        reasons.innerHTML = t.reasons.length
-          ? `<ul class="reasons">${t.reasons.map(r => `<li><span class="pts band-${t.riskBand}">+${r.points}</span><span><span class="what">${esc(r.label)}</span><span class="why">${esc(r.detail)}</span></span></li>`).join('')}</ul>`
-          : '<p class="muted small" style="margin:0">No risk conditions. Every rule is checked every few seconds.</p>';
+        reasons.innerHTML = whatsWrong(t);
       }
     } else {
       facts.innerHTML = `<div style="grid-column:1/-1" class="muted small">${esc(d.status === 'PLANNED' ? 'Planned to depart at ' + fmtTime(d.plannedStart) : 'This trip is no longer on the road.')}</div>`;
@@ -365,11 +420,11 @@
   }
 
   async function runScenario(scenario) {
-    if (scenario === 'BREAKDOWN' && !confirm('Report a breakdown for this vehicle? This opens a critical incident.')) return;
+    if (scenario === 'BREAKDOWN' && !confirm('Pretend the driver reported a breakdown? This opens a Breakdown incident.')) return;
     try {
       await api('POST', `/api/sim/trips/${state.selected}/scenario`, { scenario, minutes: 20 });
-      const labels = { SLOW: 'Vehicle slowed to 45% of planned speed', EXTEND_STOP: 'Next stop extended by 20 minutes',
-        DETOUR: 'Vehicle will leave its route for the next few kilometres', SILENT: 'Vehicle stopped sending its location',
+      const labels = { SLOW: 'Vehicle slowed to 45% of planned speed', EXTEND_STOP: 'Truck will be stuck 20 min at its next stop',
+        DETOUR: 'Vehicle will leave its route for the next few kilometres', SILENT: 'Truck stopped sending its position',
         BREAKDOWN: 'Breakdown reported', NORMAL: 'Vehicle back to normal' };
       toast(labels[scenario] || scenario, state.detail?.code);
       await refreshDetail(false);

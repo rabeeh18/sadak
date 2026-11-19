@@ -188,6 +188,7 @@ public final class LiveTrip {
     void seedPosition(GeoPoint p, double progress, Instant lastFix) {
         this.position = p;
         this.progress = progress;
+        this.heading = route.locate(progress).bearing();
         this.lastFixAt = lastFix;
         this.lastMovedAt = lastFix;
     }

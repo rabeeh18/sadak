@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Shipments')}"></head>
+<body>
+<header th:replace="~{layout :: header('desk-shipments')}"></header>
+<main class="page">
+  <div class="page-head">
+    <div><h1>Shipments</h1><p class="sub" th:text="'Parcels leaving ' + ${w.name} + '.'">sub</p></div>
+    <a class="btn btn-primary" href="/desk/book"><svg class="icon"><use href="/img/icons.svg#i-plus"></use></svg>Book a parcel</a>
+  </div>
+  <th:block th:replace="~{layout :: flash}"></th:block>
+  <section class="panel">
+    <form class="filters" method="get" action="/desk/shipments">
+      <div class="field"><label for="q">Search</label><input id="q" name="q" type="text" th:value="${q}" placeholder="Tracking number, recipient or town"></div>
+      <div class="field"><label for="st">Status</label><select id="st" name="status"><option value="">Any</option>
+        <option th:each="x : ${statuses}" th:value="${x}" th:text="${x.label()}" th:selected="${x == status}"></option></select></div>
+      <button class="btn" type="submit">Apply</button>
+    </form>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Parcel</th><th>Recipient</th><th>To</th><th>Due by</th><th>Trip</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <tr th:each="s : ${page.content}">
+            <td><strong th:text="${s.trackingNo}">FL</strong><span class="sub" th:text="${s.weightKg} + ' kg'">kg</span></td>
+            <td><span th:text="${s.recipientName}">r</span><span class="sub" th:if="${s.recipientPhone != null}" th:text="${s.recipientPhone}">p</span></td>
+            <td><span th:text="${s.destName}">to</span><span class="sub" th:text="${s.destPin}">pin</span>
+              <span class="sub cnote" th:if="${s.customerNote != null}" th:text="'Customer note: “' + ${s.customerNote} + '”'">note</span></td>
+            <td class="num" th:text="${@fmt.when(s.deadline)}">t</td>
+            <td th:text="${s.trip != null} ? ${s.trip.code} : '—'">TR</td>
+            <td><span th:replace="~{parts :: shipmentStatus(${s.status})}"></span></td>
+            <td class="r"><form th:if="${s.status.name() == 'FAILED'}" method="post" th:action="@{/desk/shipments/{id}/rebook(id=${s.id})}">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+              <input type="hidden" name="back" value="/desk/shipments">
+              <button class="btn btn-sm btn-quiet" type="submit">Rebook</button></form></td>
+          </tr>
+          <tr th:if="${page.content.isEmpty()}"><td colspan="7"><div class="empty"><strong>No shipments</strong>Nothing matches these filters.</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <nav th:replace="~{parts :: pager(${page}, '/desk/shipments?' + (${status} != null ? 'status=' + ${status} + '&' : '') + (${q} != null ? 'q=' + ${q} + '&' : ''))}"></nav>
+  </section>
+</main>
+<th:block th:replace="~{layout :: scripts}"></th:block>
+</body>
+</html>

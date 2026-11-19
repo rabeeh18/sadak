@@ -118,13 +118,13 @@ public class IncidentService {
             }
             Instant now = clock.now();
             if (incident.getStatus() == IncidentStatus.DETECTED) {
-                incident.resolve("Condition cleared automatically", now);
-                actions.save(new IncidentAction(incident, IncidentAction.Kind.RESOLVED, "Condition cleared automatically", CurrentUser.SYSTEM, now));
-                audit.record("INCIDENT_AUTO_RESOLVED", "INCIDENT", incident.getId(), incident.getCode() + " cleared automatically");
+                incident.resolve("Fixed itself: the problem went away before anyone picked it up", now);
+                actions.save(new IncidentAction(incident, IncidentAction.Kind.RESOLVED, "Fixed itself", CurrentUser.SYSTEM, now));
+                audit.record("INCIDENT_AUTO_RESOLVED", "INCIDENT", incident.getId(), incident.getCode() + " fixed itself");
             } else {
                 incident.markConditionCleared();
                 actions.save(new IncidentAction(incident, IncidentAction.Kind.CONDITION_CLEARED,
-                    "Monitoring no longer detects this condition", CurrentUser.SYSTEM, now));
+                    "The problem went away; close it when you are done", CurrentUser.SYSTEM, now));
             }
             publish(incident, "updated");
         });
@@ -151,20 +151,6 @@ public class IncidentService {
         audit.record("INCIDENT_ACTION", "INCIDENT", id, i.getCode() + " " + kind.label().toLowerCase()
                 + (note == null || note.isBlank() ? "" : ": " + note.trim()),
             AuditFields.of("status", before), AuditFields.of("status", i.getStatus()));
-        publish(i, "updated");
-    }
-
-    @Transactional
-    public void escalate(long id, String note) {
-        Incident i = get(id);
-        RiskBand before = i.getSeverity();
-        i.escalate();
-        i.actionTaken(CurrentUser.username(), clock.now());
-        record(i, IncidentAction.Kind.ESCALATED, note);
-        audit.record("INCIDENT_ESCALATED", "INCIDENT", id, i.getCode() + " escalated",
-            AuditFields.of("severity", before), AuditFields.of("severity", i.getSeverity()));
-        notifications.notifyRoles(List.of(Role.ADMIN), i.getSeverity(), "Escalated: " + i.getCode() + " " + i.getType().label(),
-            note == null || note.isBlank() ? i.getTitle() : note.trim(), "/incidents/" + i.getId());
         publish(i, "updated");
     }
 

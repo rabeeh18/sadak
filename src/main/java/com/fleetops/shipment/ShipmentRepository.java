@@ -1,6 +1,5 @@
 package com.fleetops.shipment;
 
-import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -13,7 +12,8 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
 
-    Optional<Shipment> findByTrackingNo(String trackingNo);
+    @EntityGraph(attributePaths = "originWarehouse")
+    Optional<Shipment> findWithWarehouseByTrackingNo(String trackingNo);
 
     @EntityGraph(attributePaths = "originWarehouse")
     List<Shipment> findByOriginWarehouseIdAndStatusOrderByDeadlineAsc(Long warehouseId, ShipmentStatus status);
@@ -41,8 +41,19 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
 
     long countByStatus(ShipmentStatus status);
 
-    @Query("select count(s) from Shipment s where s.status = com.fleetops.shipment.ShipmentStatus.DELIVERED and s.deliveredAt >= :from and s.deliveredAt < :to")
-    long countDeliveredBetween(Instant from, Instant to);
+    @EntityGraph(attributePaths = "originWarehouse")
+    List<Shipment> findByStatus(ShipmentStatus status);
+
+    /** Parcels still to be delivered from a warehouse that carry a note from the customer. */
+    @EntityGraph(attributePaths = {"trip"})
+    @Query("""
+        select s from Shipment s
+        where s.originWarehouse.id = :warehouseId and s.customerNote is not null
+          and s.status in (com.fleetops.shipment.ShipmentStatus.CREATED, com.fleetops.shipment.ShipmentStatus.PLANNED,
+                           com.fleetops.shipment.ShipmentStatus.OUT_FOR_DELIVERY)
+        order by s.customerNoteAt desc
+        """)
+    List<Shipment> openNotes(Long warehouseId);
 
     @Query(value = "select nextval('tracking_no_seq')", nativeQuery = true)
     long nextTrackingNumber();

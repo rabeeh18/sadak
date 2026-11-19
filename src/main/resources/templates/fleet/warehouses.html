@@ -11,12 +11,13 @@
     <section class="panel">
       <div class="table-wrap">
         <table class="data">
-          <thead><tr><th>Code</th><th>Warehouse</th><th>Address</th><th>Sq.</th><th class="r">Vehicles</th><th>Status</th><th></th></tr></thead>
+          <thead><tr><th>Code</th><th>Warehouse</th><th>Address</th><th>Desk</th><th>Sq.</th><th class="r">Vehicles</th><th>Status</th><th></th></tr></thead>
           <tbody>
             <tr th:each="w : ${warehouses}">
               <td><strong th:text="${w.code}" style="color:var(--contour)">LDH</strong></td>
               <td th:text="${w.name}">name</td>
               <td class="small" th:text="${w.address}">addr</td>
+              <td class="small"><th:block th:if="${w.deskPhone != null}"><span th:text="${w.deskPhone}">p</span><span class="sub" th:text="${w.deskOpens} + '–' + ${w.deskCloses}">h</span></th:block><span th:if="${w.deskPhone == null}" class="muted">Not set</span></td>
               <td><span class="grid-ref" th:text="${@fmt.grid(w.lat, w.lng)}">A1</span></td>
               <td class="r num" th:text="${vehicleCounts[w.id] ?: 0}">0</td>
               <td><span class="tag" th:classappend="${w.active} ? 'tag-green' : 'tag-ink'" th:text="${w.active} ? 'Active' : 'Inactive'">a</span></td>
@@ -30,6 +31,9 @@
                       <div class="field"><label>Address</label><input name="address" th:value="${w.address}" required></div>
                       <div class="form-grid" style="grid-template-columns:1fr 1fr"><div class="field"><label>Lat</label><input name="lat" type="number" step="0.00001" th:value="${w.lat}"></div>
                         <div class="field"><label>Lng</label><input name="lng" type="number" step="0.00001" th:value="${w.lng}"></div></div>
+                      <div class="field"><label>Desk phone <span class="muted" style="font-weight:400">(shown to customers)</span></label><input name="deskPhone" type="tel" th:value="${w.deskPhone}" placeholder="0175 230 1234"></div>
+                      <div class="form-grid" style="grid-template-columns:1fr 1fr"><div class="field"><label>Desk opens</label><input name="deskOpens" type="time" th:value="${w.deskOpens}"></div>
+                        <div class="field"><label>Desk closes</label><input name="deskCloses" type="time" th:value="${w.deskCloses}"></div></div>
                       <label class="check field"><input type="checkbox" name="active" value="true" th:checked="${w.active}"> Active</label>
                       <button class="btn btn-sm btn-primary" type="submit">Save</button>
                     </form>

@@ -199,8 +199,12 @@ public class FleetController {
     @PostMapping("/fleet/warehouses/{id}")
     public String updateWarehouse(@PathVariable long id, @RequestParam String name, @RequestParam String city,
                                   @RequestParam String address, @RequestParam double lat, @RequestParam double lng,
-                                  @RequestParam(defaultValue = "false") boolean active, RedirectAttributes ra) {
+                                  @RequestParam(defaultValue = "false") boolean active,
+                                  @RequestParam(defaultValue = "") String deskPhone, @RequestParam(defaultValue = "") String deskOpens,
+                                  @RequestParam(defaultValue = "") String deskCloses, RedirectAttributes ra) {
         fleet.updateWarehouse(id, name, city, address, lat, lng, active);
+        fleet.updateWarehouseDesk(id, deskPhone, deskOpens.isBlank() ? null : java.time.LocalTime.parse(deskOpens),
+            deskCloses.isBlank() ? null : java.time.LocalTime.parse(deskCloses));
         ra.addFlashAttribute("ok", "Warehouse updated.");
         return "redirect:/fleet/warehouses";
     }

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head(${c.code})}"></head>
+<body>
+<header th:replace="~{layout :: header(${me.warehouse} ? 'desk' : 'incidents')}"></header>
+<main class="page">
+  <a class="back" href="/complaints"><svg class="icon"><use href="/img/icons.svg#i-arrow-left"></use></svg>Complaints</a>
+  <div class="page-head">
+    <div>
+      <span class="caps muted" th:text="${c.code} + ' · ' + ${s.originWarehouse.name}">SR</span>
+      <h1 th:text="'Customer complaint: ' + ${c.category.label().toLowerCase()}">Complaint</h1>
+      <p class="sub">
+        <span th:if="${c.status.name() == 'NEW'}" class="tag tag-red">New</span>
+        <span th:if="${c.status.name() == 'IN_PROGRESS'}" class="tag tag-ochre" th:text="'With ' + (${names[c.handledBy]} ?: ${c.handledBy})">taken</span>
+        <span th:if="${c.status.name() == 'RESOLVED'}" class="tag tag-green">Resolved</span>
+        <span th:if="${c.sentToDispatch}" class="tag tag-blue">Sent to dispatch</span>
+        <span class="small muted" th:text="'Reported ' + ${@fmt.dateTime(c.createdAt)}">t</span>
+      </p>
+    </div>
+  </div>
+  <th:block th:replace="~{layout :: flash}"></th:block>
+
+  <div class="grid-main-side">
+    <section class="panel">
+      <div class="panel-head"><h2>What the customer said</h2></div>
+      <div class="panel-body">
+        <p class="cmp-msg" style="font-size:16px;margin-top:0" th:text="'“' + ${c.message} + '”'">msg</p>
+        <dl class="cmp-kv">
+          <dt>Call back</dt><dd><a th:href="'tel:' + ${c.callbackPhone}"><b th:text="${c.callbackPhone}">phone</b></a></dd>
+          <dt>Parcel</dt><dd><a th:unless="${me.warehouse}" th:href="@{/shipments/{id}(id=${s.id})}" th:text="${s.trackingNo}">FL</a><span th:if="${me.warehouse}" th:text="${s.trackingNo}">FL</span>
+            <span th:text="' · ' + ${s.status.label()}">st</span></dd>
+          <dt>Recipient</dt><dd th:text="${s.recipientName} + ' · ' + ${s.destName}">r</dd>
+          <dt>Due by</dt><dd th:text="${@fmt.dateTime(s.deadline)}">t</dd>
+          <th:block th:if="${s.trip != null}">
+            <dt>Trip</dt><dd><a th:unless="${me.warehouse}" th:href="@{/trips/{id}(id=${s.trip.id})}" th:text="${s.trip.code}">TR</a><span th:if="${me.warehouse}" th:text="${s.trip.code}">TR</span>
+              <span th:text="' · ' + ${s.trip.vehicle.registration} + (${s.stop != null} ? ' · stop ' + ${s.stop.seq} : '')">x</span></dd>
+            <dt>Driver</dt><dd><span th:text="${s.trip.driver.fullName}">d</span>
+              <a th:if="${s.trip.driver.phone != null}" th:href="'tel:' + ${s.trip.driver.phone}" th:text="' · ' + ${s.trip.driver.phone}">p</a></dd>
+          </th:block>
+          <th:block th:if="${s.customerNote != null}"><dt>Their note</dt><dd th:text="'“' + ${s.customerNote} + '”'">n</dd></th:block>
+          <th:block th:if="${s.failureReason != null}"><dt>Failed attempt</dt><dd th:text="${s.failureReason}">f</dd></th:block>
+        </dl>
+        <div th:if="${c.reply != null}" class="trk-reply">
+          <span class="caps muted">Reply shown to the customer</span>
+          <p style="margin:4px 0 0" th:text="${c.reply}">reply</p>
+          <span class="small muted" th:text="${@fmt.dateTime(c.resolvedAt)} + ' · ' + (${names[c.handledBy]} ?: ${c.handledBy})">t</span>
+        </div>
+      </div>
+    </section>
+
+    <aside th:if="${c.open}">
+      <section class="panel">
+        <div class="panel-head"><h2>Handle it</h2></div>
+        <div class="panel-body">
+          <form th:if="${c.status.name() == 'NEW'}" method="post" th:action="@{/complaints/{id}/take(id=${c.id})}" style="margin-bottom:14px">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button class="btn btn-quiet" type="submit">I'm on it</button>
+            <p class="small muted" style="margin:6px 0 0">The customer sees "Being looked at".</p>
+          </form>
+          <form method="post" th:action="@{/complaints/{id}/resolve(id=${c.id})}">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div class="field"><label for="reply">Reply to the customer</label>
+              <textarea id="reply" name="reply" rows="4" maxlength="500" required placeholder="What you found and what happens next"></textarea>
+              <div class="hint">Shown on their tracking page.</div></div>
+            <button class="btn btn-primary" type="submit">Reply &amp; resolve</button>
+          </form>
+          <form th:if="${deskUser and !c.sentToDispatch}" method="post" th:action="@{/complaints/{id}/dispatch(id=${c.id})}" style="margin-top:18px;border-top:1px solid var(--rule-soft);padding-top:14px">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div class="field"><label for="dn">Need dispatch? <span class="muted" style="font-weight:400">(optional note)</span></label>
+              <input id="dn" name="note" type="text" maxlength="200" placeholder="e.g. driver isn't answering"></div>
+            <button class="btn btn-quiet" type="submit">Send to dispatch</button>
+          </form>
+        </div>
+      </section>
+    </aside>
+  </div>
+</main>
+<th:block th:replace="~{layout :: scripts}"></th:block>
+</body>
+</html>

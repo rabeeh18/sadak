@@ -1,10 +1,10 @@
 package com.fleetops.trip;
 
 public enum RiskBand {
-    LOW("Low"),
-    MEDIUM("Medium"),
-    HIGH("High"),
-    CRITICAL("Critical");
+    // A trip's light. The names are kept from the earlier scoring bands, so stored data stays valid.
+    LOW("On track"),
+    MEDIUM("Watch"),
+    HIGH("Needs action");
 
     private final String label;
 

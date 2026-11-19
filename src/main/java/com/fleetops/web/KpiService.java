@@ -50,7 +50,7 @@ public class KpiService {
                    count(*) filter (where status <> 'RETIRED') as in_service
             from vehicles""");
         Map<String, Object> incidents = jdbc.queryForMap("""
-            select count(*) as open, count(*) filter (where severity = 'CRITICAL') as critical
+            select count(*) as open, count(*) filter (where status = 'DETECTED') as unhandled
             from incidents where status <> 'RESOLVED'""");
 
         long delivered = ((Number) deliveries.get("delivered")).longValue();
@@ -64,7 +64,7 @@ public class KpiService {
         out.put("onTimeToday", delivered + failed == 0 ? null : Math.round(100.0 * onTime / (delivered + failed)));
         out.put("atRisk", monitoring.shipmentsAtRisk());
         out.put("openIncidents", incidents.get("open"));
-        out.put("criticalIncidents", incidents.get("critical"));
+        out.put("unhandledIncidents", incidents.get("unhandled"));
         out.put("idleVehicles", vehicles.get("idle"));
         out.put("unavailableVehicles", vehicles.get("unavailable"));
         out.put("vehiclesInService", vehicles.get("in_service"));

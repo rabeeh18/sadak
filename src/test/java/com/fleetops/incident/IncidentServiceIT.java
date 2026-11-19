@@ -43,12 +43,12 @@ class IncidentServiceIT extends IntegrationTestSupport {
     @Test
     void repeatDetectionsUpdateTheOpenIncident() {
         incidents.detect(slaRisk(RiskBand.HIGH));
-        incidents.detect(slaRisk(RiskBand.CRITICAL));
-        incidents.detect(slaRisk(RiskBand.CRITICAL));
+        incidents.detect(slaRisk(RiskBand.HIGH));
+        incidents.detect(slaRisk(RiskBand.HIGH));
         List<Incident> all = repository.findAll();
         assertThat(all).hasSize(1);
         assertThat(all.get(0).getDetectionCount()).isEqualTo(3);
-        assertThat(all.get(0).getSeverity()).isEqualTo(RiskBand.CRITICAL);
+        assertThat(all.get(0).getStatus()).isEqualTo(IncidentStatus.DETECTED);
     }
 
     @Test
@@ -86,7 +86,7 @@ class IncidentServiceIT extends IntegrationTestSupport {
         incidents.acknowledge(second.getId());
         incidents.conditionCleared(tripId, IncidentType.SLA_RISK);
         Incident after = repository.findById(second.getId()).orElseThrow();
-        assertThat(after.getStatus()).isEqualTo(IncidentStatus.ACKNOWLEDGED);
+        assertThat(after.getStatus()).isEqualTo(IncidentStatus.IN_PROGRESS);
         assertThat(after.isConditionCleared()).isTrue();
     }
 

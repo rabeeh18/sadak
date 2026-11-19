@@ -22,13 +22,13 @@
     </div>
     <div class="legend-cell" data-tone-for="atRisk">
       <span class="figure" data-kpi="atRisk" th:text="${kpi.atRisk}">0</span>
-      <span class="label">Shipments at SLA risk</span>
+      <span class="label">Parcels running late or close</span>
       <span class="note">projected late or within margin</span>
     </div>
     <div class="legend-cell" data-tone-for="openIncidents">
       <span class="figure" data-kpi="openIncidents" th:text="${kpi.openIncidents}">0</span>
       <span class="label">Open incidents</span>
-      <span class="note"><span data-kpi="criticalIncidents" th:text="${kpi.criticalIncidents}">0</span> critical</span>
+      <span class="note"><span data-kpi="unhandledIncidents" th:text="${kpi.unhandledIncidents}">0</span> not picked up</span>
     </div>
     <div class="legend-cell">
       <span class="figure"><span data-kpi="idleVehicles" th:text="${kpi.idleVehicles}">0</span><span class="figure-sep">/</span><span data-kpi="unavailableVehicles" th:text="${kpi.unavailableVehicles}">0</span></span>
@@ -49,9 +49,9 @@
         <span><i class="lg-route"></i>Planned route</span>
         <span><i class="lg-trail"></i>Travelled</span>
         <span><i class="lg-wh"></i>Warehouse</span>
-        <span><i class="lg-veh band-LOW"></i>On plan</span>
-        <span><i class="lg-veh band-HIGH"></i>High risk</span>
-        <span><i class="lg-veh band-CRITICAL"></i>Critical</span>
+        <span><i class="lg-veh band-LOW"></i>On track</span>
+        <span><i class="lg-veh band-MEDIUM"></i>Watch</span>
+        <span><i class="lg-veh band-HIGH"></i>Needs action</span>
         <span class="lg-live" data-live-status>Connecting…</span>
       </div>
     </section>
@@ -65,7 +65,7 @@
         </div>
         <div class="side-scroll" data-pane="trips">
           <table class="data trip-index">
-            <thead><tr><th>Risk</th><th>Trip</th><th class="r">vs plan</th><th>Condition</th><th>Sq.</th></tr></thead>
+            <thead><tr><th>Status</th><th>Trip</th><th class="r">vs plan</th><th>Condition</th><th>Sq.</th></tr></thead>
             <tbody data-trip-rows><tr><td colspan="5" class="empty">Loading live trips…</td></tr></tbody>
           </table>
         </div>

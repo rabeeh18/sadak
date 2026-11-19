@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fleetops.common.geo.GridReference;
 import com.fleetops.common.time.OperationalClock;
+import com.fleetops.config.AppMode;
+import com.fleetops.common.web.NotFoundException;
 import com.fleetops.fleet.Vehicle;
 import com.fleetops.fleet.VehicleRepository;
 import com.fleetops.fleet.Warehouse;
@@ -56,12 +58,13 @@ public class TowerController {
     private final SimulationEngine simulation;
     private final OperationalClock clock;
     private final ClockKeeper clockKeeper;
+    private final AppMode mode;
 
     public TowerController(MonitoringService monitoring, KpiService kpis, WarehouseRepository warehouses,
                            VehicleRepository vehicles, IncidentService incidents, IncidentRepository incidentRepository,
                            TripService trips, RouteVersionRepository routes, ShipmentRepository shipments,
                            VehicleLocationRepository locations, FleetBroadcaster broadcaster, SimulationEngine simulation,
-                           OperationalClock clock, ClockKeeper clockKeeper) {
+                           OperationalClock clock, ClockKeeper clockKeeper, AppMode mode) {
         this.monitoring = monitoring;
         this.kpis = kpis;
         this.warehouses = warehouses;
@@ -76,6 +79,7 @@ public class TowerController {
         this.simulation = simulation;
         this.clock = clock;
         this.clockKeeper = clockKeeper;
+        this.mode = mode;
     }
 
     @GetMapping("/tower")
@@ -163,6 +167,7 @@ public class TowerController {
         out.put("routes", routeVersions);
         out.put("trail", trail);
         out.put("summary", monitoring.summary(id));
+        out.put("simulated", mode.demo() && trip.getVehicle().isSimulated());
         out.put("scenario", simulation.scenarioOf(id).name());
         out.put("extraDwellMin", simulation.extraDwellOf(id));
         out.put("incidents", incidentRepository.findByTripIdOrderByDetectedAtDesc(id).stream()
@@ -181,6 +186,7 @@ public class TowerController {
     @PostMapping("/api/sim/speed")
     @ResponseBody
     public Map<String, Object> speed(@RequestBody SpeedRequest req) {
+        requireDemo();
         clock.setSpeed(req.speed());
         clockKeeper.saveControls();
         return clockJson();
@@ -189,6 +195,7 @@ public class TowerController {
     @PostMapping("/api/sim/pause")
     @ResponseBody
     public Map<String, Object> pause() {
+        requireDemo();
         clock.pause();
         clockKeeper.saveControls();
         return clockJson();
@@ -197,6 +204,7 @@ public class TowerController {
     @PostMapping("/api/sim/resume")
     @ResponseBody
     public Map<String, Object> resume() {
+        requireDemo();
         clock.resume();
         clockKeeper.saveControls();
         return clockJson();
@@ -205,12 +213,20 @@ public class TowerController {
     @PostMapping("/api/sim/trips/{id}/scenario")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> scenario(@PathVariable long id, @RequestBody ScenarioRequest req) {
+        requireDemo();
         if ("EXTEND_STOP".equals(req.scenario())) {
             simulation.extendStop(id, req.minutes() == null ? 20 : req.minutes());
         } else {
             simulation.apply(id, SimulationEngine.Scenario.valueOf(req.scenario()));
         }
         return ResponseEntity.ok(Map.of("scenario", simulation.scenarioOf(id).name(), "extraDwellMin", simulation.extraDwellOf(id)));
+    }
+
+    /** Simulation controls exist only in demo mode; production runs on real time. */
+    private void requireDemo() {
+        if (!mode.demo()) {
+            throw new NotFoundException("Page", "simulation controls");
+        }
     }
 
     private Map<String, Object> clockJson() {
@@ -244,9 +260,10 @@ public class TowerController {
         m.put("code", i.getCode());
         m.put("type", i.getType().name());
         m.put("typeLabel", i.getType().label());
-        m.put("severity", i.getSeverity().name());
         m.put("status", i.getStatus().name());
         m.put("statusLabel", i.getStatus().label());
+        m.put("fix", i.getType().fix());
+        m.put("callsDriver", i.getType().callsDriver());
         m.put("title", i.getTitle());
         m.put("tripId", i.getTrip() == null ? null : i.getTrip().getId());
         m.put("tripCode", i.getTrip() == null ? null : i.getTrip().getCode());

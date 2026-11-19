@@ -49,6 +49,17 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
 
     long countByStatus(TripStatus status);
 
+    /** A warehouse's trips that are live, or were planned to leave since {@code from}: its departures board. */
+    @EntityGraph(attributePaths = {"vehicle", "driver", "warehouse"})
+    @Query("""
+        select t from Trip t
+        where t.warehouse.id = :warehouseId
+          and (t.status in (com.fleetops.trip.TripStatus.PLANNED, com.fleetops.trip.TripStatus.IN_PROGRESS)
+               or t.plannedStart >= :from)
+        order by t.plannedStart asc
+        """)
+    List<Trip> departures(Long warehouseId, Instant from);
+
     @Query(value = "select nextval('trip_code_seq')", nativeQuery = true)
     long nextCodeNumber();
 }

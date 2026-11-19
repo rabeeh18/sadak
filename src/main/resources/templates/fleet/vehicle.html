@@ -52,7 +52,7 @@
           <div class="field"><label for="type">Type</label><input id="type" name="type" th:value="${v.type}" required></div>
           <div class="field"><label for="cap">Capacity (kg)</label><input id="cap" name="capacityKg" type="number" th:value="${v.capacityKg}" min="100" required></div>
           <div class="field"><label for="wh">Home warehouse</label><select id="wh" name="warehouseId"><option th:each="w : ${warehouses}" th:value="${w.id}" th:text="${w.name}" th:selected="${w.id == v.homeWarehouse.id}">w</option></select></div>
-          <label class="check field"><input type="checkbox" name="simulated" value="true" th:checked="${v.simulated}"> Position comes from the simulator</label>
+          <label class="check field" th:if="${demoMode}"><input type="checkbox" name="simulated" value="true" th:checked="${v.simulated}"> Position comes from the simulator</label>
           <button class="btn" type="submit">Save</button>
         </form>
       </section>

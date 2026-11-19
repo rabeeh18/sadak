@@ -22,8 +22,6 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
     @EntityGraph(attributePaths = "homeWarehouse")
     List<Vehicle> findByStatusInOrderByRegistrationAsc(Collection<VehicleStatus> statuses);
 
-    Optional<Vehicle> findByRegistration(String registration);
-
     boolean existsByRegistration(String registration);
 
     /** Row lock used by allocation so two dispatchers cannot take the same vehicle. */
@@ -32,7 +30,4 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
     Optional<Vehicle> lockById(Long id);
 
     long countByStatus(VehicleStatus status);
-
-    @Query("select count(v) from Vehicle v where v.status <> com.fleetops.fleet.VehicleStatus.RETIRED")
-    long countInService();
 }

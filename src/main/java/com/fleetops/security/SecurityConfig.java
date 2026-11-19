@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -19,16 +20,20 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/demo-login", "/track", "/track/**", "/error",
+                .requestMatchers("/login", "/demo", "/demo-login", "/track", "/track/**", "/error",
+                        "/account/set-password",
                         "/css/**", "/js/**", "/img/**", "/fonts/**", "/favicon.svg", "/actuator/health").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/driver/**", "/api/driver/**").hasRole("DRIVER")
+                .requestMatchers("/desk", "/desk/**").hasRole("WAREHOUSE")
+                .requestMatchers("/complaints", "/complaints/**").hasAnyRole("ADMIN", "DISPATCHER", "WAREHOUSE")
                 .requestMatchers("/api/telemetry/**").hasAnyRole("DRIVER", "ADMIN")
                 .requestMatchers("/ws/**").hasAnyRole("ADMIN", "DISPATCHER")
                 .requestMatchers("/").authenticated()
                 .anyRequest().hasAnyRole("ADMIN", "DISPATCHER"))
             .formLogin(form -> form
                 .loginPage("/login")
+                .usernameParameter("email")
                 .defaultSuccessUrl("/", true)
                 .permitAll())
             .logout(logout -> logout
@@ -51,14 +56,20 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    /** People sign in with their email; the session then carries their internal username, used by audit. */
     @Bean
     UserDetailsService userDetailsService(UserAccountRepository users) {
-        return username -> users.findByUsername(username)
-            .map(u -> User.withUsername(u.getUsername())
-                .password(u.getPasswordHash())
-                .disabled(!u.isEnabled())
-                .authorities(u.getRoles().stream().map(Role::authority).toArray(String[]::new))
-                .build())
-            .orElseThrow(() -> new UsernameNotFoundException(username));
+        return email -> users.findByEmail(UserAccount.normaliseEmail(email))
+            .map(SecurityConfig::toUserDetails)
+            .orElseThrow(() -> new UsernameNotFoundException(email));
+    }
+
+    /** Invited accounts stay disabled until the person has chosen a password. */
+    public static UserDetails toUserDetails(UserAccount u) {
+        return User.withUsername(u.getUsername())
+            .password(u.getPasswordHash())
+            .disabled(!u.isEnabled() || u.isInvitePending())
+            .authorities(u.getRoles().stream().map(Role::authority).toArray(String[]::new))
+            .build();
     }
 }

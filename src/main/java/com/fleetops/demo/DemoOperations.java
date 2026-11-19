@@ -76,6 +76,11 @@ public class DemoOperations {
     private final ZoneId zone;
     private final Map<Long, Instant> lastDispatch = new HashMap<>();
 
+    /** Demo reset: start dispatching from scratch. */
+    public synchronized void forgetAll() {
+        lastDispatch.clear();
+    }
+
     public DemoOperations(WarehouseRepository warehouses, VehicleRepository vehicles, DriverRepository drivers,
                           TripRepository trips, ShipmentRepository shipments, MaintenanceRepository maintenance,
                           TripService tripService, FleetService fleet, DemoFactory factory, OperationalClock clock,

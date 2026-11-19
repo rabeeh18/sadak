@@ -1,6 +1,7 @@
 package com.fleetops.fleet;
 
 import java.time.Instant;
+import java.time.LocalTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,6 +35,16 @@ public class Warehouse {
     private double lat;
     private double lng;
     private boolean active = true;
+
+    /** The desk customers can call; shown on the tracking page for parcels leaving this warehouse. */
+    @Column(name = "desk_phone")
+    private String deskPhone;
+
+    @Column(name = "desk_opens")
+    private LocalTime deskOpens;
+
+    @Column(name = "desk_closes")
+    private LocalTime deskCloses;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
@@ -84,6 +95,30 @@ public class Warehouse {
 
     public GeoPoint location() {
         return new GeoPoint(lat, lng);
+    }
+
+    public String getDeskPhone() {
+        return deskPhone;
+    }
+
+    public LocalTime getDeskOpens() {
+        return deskOpens;
+    }
+
+    public LocalTime getDeskCloses() {
+        return deskCloses;
+    }
+
+    public void updateDesk(String phone, LocalTime opens, LocalTime closes) {
+        this.deskPhone = phone;
+        this.deskOpens = opens;
+        this.deskCloses = closes;
+    }
+
+    /** Whether the desk is staffed at this local time. Unknown hours count as closed. */
+    public boolean deskOpenAt(LocalTime local) {
+        return deskPhone != null && deskOpens != null && deskCloses != null
+            && !local.isBefore(deskOpens) && local.isBefore(deskCloses);
     }
 
     public void update(String name, String city, String address, double lat, double lng, boolean active) {

@@ -88,6 +88,13 @@ public class Shipment {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    /** A note from the customer for the driver, written on the tracking page. */
+    @Column(name = "customer_note")
+    private String customerNote;
+
+    @Column(name = "customer_note_at")
+    private Instant customerNoteAt;
+
     protected Shipment() {
     }
 
@@ -155,6 +162,23 @@ public class Shipment {
             throw new BusinessRuleException("Shipment " + trackingNo + " is already " + status.label().toLowerCase());
         }
         this.deadline = newDeadline;
+    }
+
+    /** Customers can leave or change their note until the parcel is delivered or cancelled. */
+    public void leaveNote(String note, Instant at) {
+        if (status.isFinal()) {
+            throw new BusinessRuleException("This parcel is already " + status.label().toLowerCase());
+        }
+        this.customerNote = note;
+        this.customerNoteAt = note == null ? null : at;
+    }
+
+    public String getCustomerNote() {
+        return customerNote;
+    }
+
+    public Instant getCustomerNoteAt() {
+        return customerNoteAt;
     }
 
     public GeoPoint destination() {

@@ -69,6 +69,8 @@ public class DriverAppController {
                 model.addAttribute("trip", trip);
                 model.addAttribute("byStop", byStop);
                 model.addAttribute("next", trip.nextOpenStop().orElse(null));
+                model.addAttribute("noteCount", byStop.values().stream().flatMap(List::stream)
+                    .filter(s -> s.getCustomerNote() != null && !s.getStatus().isFinal()).count());
             });
         return "driver";
     }

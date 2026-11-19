@@ -1,11 +1,9 @@
 package com.fleetops.web;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -15,12 +13,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.fleetops.audit.AuditFields;
+import com.fleetops.fleet.DriverRepository;
+import com.fleetops.security.AccountService;
 import com.fleetops.audit.AuditRepository;
 import com.fleetops.audit.AuditService;
 import com.fleetops.common.web.BusinessRuleException;
 import com.fleetops.common.web.NotFoundException;
-import com.fleetops.security.CurrentUser;
 import com.fleetops.security.Role;
 import com.fleetops.security.UserAccount;
 import com.fleetops.security.UserAccountRepository;
@@ -36,15 +34,24 @@ public class AdminController {
     private final UserAccountRepository users;
     private final AuditRepository audit;
     private final AuditService auditService;
-    private final PasswordEncoder encoder;
+    private final AccountService accounts;
+    private final DriverRepository drivers;
+    private final com.fleetops.fleet.WarehouseRepository warehouses;
+    /** Present in demo mode only. */
+    private final org.springframework.beans.factory.ObjectProvider<com.fleetops.demo.DemoReset> demoReset;
 
     public AdminController(SettingsService settings, UserAccountRepository users, AuditRepository audit,
-                           AuditService auditService, PasswordEncoder encoder) {
+                           AuditService auditService, AccountService accounts,
+                           DriverRepository drivers, com.fleetops.fleet.WarehouseRepository warehouses,
+                           org.springframework.beans.factory.ObjectProvider<com.fleetops.demo.DemoReset> demoReset) {
+        this.warehouses = warehouses;
+        this.demoReset = demoReset;
         this.settings = settings;
         this.users = users;
         this.audit = audit;
         this.auditService = auditService;
-        this.encoder = encoder;
+        this.accounts = accounts;
+        this.drivers = drivers;
     }
 
     @GetMapping("/admin/settings")
@@ -54,6 +61,18 @@ public class AdminController {
         model.addAttribute("settings", visible);
         model.addAttribute("tab", "settings");
         return "admin/settings";
+    }
+
+    /** Demo mode: throw everything away and start a fresh demo day. */
+    @PostMapping("/admin/demo-reset")
+    public String resetDemo(RedirectAttributes ra) {
+        com.fleetops.demo.DemoReset reset = demoReset.getIfAvailable();
+        if (reset == null) {
+            throw new NotFoundException("Page", "/admin/demo-reset");
+        }
+        reset.reset();
+        ra.addFlashAttribute("ok", "Demo data reset: a fresh day with trucks on the road. Accounts made during the demo are gone.");
+        return "redirect:/admin/settings";
     }
 
     @PostMapping("/admin/rules/{code}")
@@ -72,7 +91,7 @@ public class AdminController {
     @PostMapping("/admin/settings/{key}")
     public String updateSetting(@PathVariable String key, @RequestParam String value, RedirectAttributes ra) {
         String v = value.trim();
-        if (key.startsWith("risk.band.") || key.startsWith("tracking.") || key.equals("sla.at-risk-min")) {
+        if (key.startsWith("tracking.") || key.equals("sla.at-risk-min") || key.equals("risk.late-action-min")) {
             try {
                 int n = Integer.parseInt(v);
                 if (n < 0 || n > 100_000) {
@@ -82,10 +101,7 @@ public class AdminController {
                 throw new BusinessRuleException("Enter a whole number for this setting");
             }
         }
-        if (key.equals("incident.sla-min-band") && !List.of("LOW", "MEDIUM", "HIGH", "CRITICAL").contains(v.toUpperCase())) {
-            throw new BusinessRuleException("Use LOW, MEDIUM, HIGH or CRITICAL");
-        }
-        settings.updateSetting(key, key.equals("incident.sla-min-band") ? v.toUpperCase() : v);
+        settings.updateSetting(key, v);
         ra.addFlashAttribute("ok", "Setting saved.");
         return "redirect:/admin/settings";
     }
@@ -93,47 +109,59 @@ public class AdminController {
     // ------------------------------------------------------------------ users
 
     @GetMapping("/admin/users")
+    @Transactional(readOnly = true)
     public String users(Model model) {
-        model.addAttribute("users", users.findAllByOrderByUsernameAsc());
+        model.addAttribute("users", users.findAllByOrderByFullNameAsc());
         model.addAttribute("roles", Role.values());
+        model.addAttribute("staffRoles", List.of(Role.DISPATCHER, Role.ADMIN));
+        List<com.fleetops.fleet.Driver> allDrivers = drivers.findAllByOrderByFullNameAsc();
+        model.addAttribute("unlinkedDrivers", allDrivers.stream().filter(d -> d.getUser() == null).toList());
+        model.addAttribute("driverOf", allDrivers.stream().filter(d -> d.getUser() != null)
+            .collect(java.util.stream.Collectors.toMap(d -> d.getUser().getId(), com.fleetops.fleet.Driver::getFullName)));
+        model.addAttribute("activeAdmins", users.countActiveWithRole(Role.ADMIN));
+        model.addAttribute("warehouses", warehouses.findAllByOrderByNameAsc());
+        model.addAttribute("warehouseNames", warehouses.findAll().stream()
+            .collect(java.util.stream.Collectors.toMap(com.fleetops.fleet.Warehouse::getId, com.fleetops.fleet.Warehouse::getName)));
         model.addAttribute("tab", "users");
         return "admin/users";
     }
 
-    @PostMapping("/admin/users")
-    @Transactional
-    public String createUser(@RequestParam String username, @RequestParam String fullName, @RequestParam String password,
-                             @RequestParam Role role, RedirectAttributes ra) {
-        String name = username.trim().toLowerCase();
-        if (!name.matches("[a-z0-9._-]{3,40}")) {
-            throw new BusinessRuleException("Usernames are 3–40 lowercase letters, digits, dots, dashes or underscores");
-        }
-        if (users.existsByUsername(name)) {
-            throw new BusinessRuleException("The username " + name + " is taken");
-        }
-        if (password.length() < 10) {
-            throw new BusinessRuleException("Passwords need at least 10 characters");
-        }
-        UserAccount u = users.save(new UserAccount(name, encoder.encode(password), fullName.trim(), EnumSet.of(role)));
-        auditService.record("USER_CREATED", "USER", u.getId(), "User " + name + " created as " + role.label(),
-            null, AuditFields.of("role", role));
-        ra.addFlashAttribute("ok", "User " + name + " created.");
+    @PostMapping("/admin/users/invite")
+    public String invite(@RequestParam String fullName, @RequestParam String email, @RequestParam Role role,
+                         @RequestParam(required = false) Long driverId, @RequestParam(required = false) Long warehouseId,
+                         RedirectAttributes ra) {
+        AccountService.Link link = accounts.invite(fullName, email, role, role == Role.DRIVER ? driverId : null,
+            role == Role.WAREHOUSE ? warehouseId : null);
+        flashLink(ra, link, "Invite");
+        return "redirect:/admin/users";
+    }
+
+    @PostMapping("/admin/users/{id}/role")
+    public String changeRole(@PathVariable long id, @RequestParam Role role, RedirectAttributes ra) {
+        accounts.changeRole(id, role);
+        ra.addFlashAttribute("ok", "Role updated to " + role.label() + ".");
         return "redirect:/admin/users";
     }
 
     @PostMapping("/admin/users/{id}/toggle")
-    @Transactional
     public String toggle(@PathVariable long id, RedirectAttributes ra) {
-        UserAccount u = users.findById(id).orElseThrow(() -> new NotFoundException("User", id));
-        if (u.getUsername().equals(CurrentUser.username())) {
-            throw new BusinessRuleException("You cannot disable your own account");
-        }
-        u.setEnabled(!u.isEnabled());
-        auditService.record(u.isEnabled() ? "USER_ENABLED" : "USER_DISABLED", "USER", id,
-            "User " + u.getUsername() + (u.isEnabled() ? " enabled" : " disabled"),
-            AuditFields.of("enabled", !u.isEnabled()), AuditFields.of("enabled", u.isEnabled()));
-        ra.addFlashAttribute("ok", u.getUsername() + (u.isEnabled() ? " can sign in again." : " can no longer sign in."));
+        UserAccount u = accounts.toggleEnabled(id);
+        ra.addFlashAttribute("ok", u.getFullName() + (u.isEnabled() ? " can sign in again." : " can no longer sign in."));
         return "redirect:/admin/users";
+    }
+
+    /** A fresh invite for pending accounts, or a password reset link for active ones. */
+    @PostMapping("/admin/users/{id}/link")
+    public String link(@PathVariable long id, RedirectAttributes ra) {
+        boolean pending = users.findById(id).map(UserAccount::isInvitePending).orElse(false);
+        flashLink(ra, accounts.resetLink(id), pending ? "Invite" : "Password reset link");
+        return "redirect:/admin/users";
+    }
+
+    private void flashLink(RedirectAttributes ra, AccountService.Link link, String what) {
+        ra.addFlashAttribute("shareNote", what + " created for " + link.email()
+            + ". Send them this link yourself, for example on WhatsApp. It works once.");
+        ra.addFlashAttribute("shareLink", link.url());
     }
 
     // ------------------------------------------------------------------ audit

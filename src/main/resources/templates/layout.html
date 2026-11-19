@@ -24,12 +24,17 @@
 <svg th:fragment="spot" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0.8 9.4 9.2H0.6z" fill="currentColor"/></svg>
 
 <header th:fragment="header(active)" class="topbar">
-  <a class="brand" href="/tower" aria-label="Sadak home">
+  <a class="brand" href="/" aria-label="Sadak home">
     <span class="mark-p4" style="--s:28px" lang="pa" aria-hidden="true">ਸ<span>ੜ</span>ਕ</span>
-    <span><span class="sheet-title">Sadak</span><span class="brand-sub">Punjab · demo data</span></span>
+    <span><span class="sheet-title">Sadak</span><span class="brand-sub" th:text="${me.warehouse} ? ${me.warehouseName} : (${demoMode} ? 'Punjab · demo data' : 'Punjab')">Punjab</span></span>
   </a>
   <nav aria-label="Main">
-    <ul class="nav">
+    <ul class="nav" th:if="${me.warehouse}">
+      <li><a href="/desk" th:attr="aria-current=${active == 'desk'} ? 'page' : null"><svg class="icon"><use href="/img/icons.svg#i-warehouse"></use></svg>Desk</a></li>
+      <li><a href="/desk/shipments" th:attr="aria-current=${active == 'desk-shipments'} ? 'page' : null"><svg class="icon"><use href="/img/icons.svg#i-package"></use></svg>Shipments</a></li>
+      <li><a href="/desk/book" th:attr="aria-current=${active == 'desk-book'} ? 'page' : null"><svg class="icon"><use href="/img/icons.svg#i-plus"></use></svg>Book a parcel</a></li>
+    </ul>
+    <ul class="nav" th:unless="${me.warehouse}">
       <li><a href="/tower" th:attr="aria-current=${active == 'tower'} ? 'page' : null"><svg class="icon"><use href="/img/icons.svg#i-map"></use></svg>Control tower</a></li>
       <li><a href="/trips" th:attr="aria-current=${active == 'trips'} ? 'page' : null"><svg class="icon"><use href="/img/icons.svg#i-route"></use></svg>Trips</a></li>
       <li><a href="/incidents" th:attr="aria-current=${active == 'incidents'} ? 'page' : null"><svg class="icon"><use href="/img/icons.svg#i-triangle-alert"></use></svg>Incidents <span class="count" data-incident-count th:text="${openIncidentCount > 0 ? openIncidentCount : ''}"></span></a></li>
@@ -41,9 +46,10 @@
     </ul>
   </nav>
   <div class="topbar-right">
-    <div class="simclock" data-simclock th:attr="data-now=${clockState.now},data-speed=${clockState.speed},data-paused=${clockState.paused ? '' : null}">
+    <div class="simclock" th:unless="${me.warehouse}" data-simclock th:attr="data-now=${clockState.now},data-speed=${clockState.speed},data-paused=${clockState.paused ? '' : null}">
       <span class="figure simclock-time" data-clock-time>--:--</span>
-      <span class="simclock-date"><span data-clock-date>&nbsp;</span><br>IST · simulated</span>
+      <span class="simclock-date"><span data-clock-date>&nbsp;</span><br><span th:text="${demoMode} ? 'IST · simulated' : 'IST'">IST</span></span>
+      <th:block th:if="${demoMode}">
       <select data-clock-speed aria-label="Simulation speed">
         <option value="1">1×</option>
         <option value="10">10×</option>
@@ -55,8 +61,9 @@
         <svg class="icon" data-icon-pause><use href="/img/icons.svg#i-pause"></use></svg>
         <svg class="icon" data-icon-play hidden><use href="/img/icons.svg#i-play"></use></svg>
       </button>
+      </th:block>
     </div>
-    <div style="position:relative">
+    <div style="position:relative" th:unless="${me.warehouse}">
       <button type="button" class="iconbtn" data-notes-toggle aria-label="Notifications" aria-expanded="false">
         <svg class="icon icon-lg"><use href="/img/icons.svg#i-bell"></use></svg><span class="dot" data-notes-count></span>
       </button>

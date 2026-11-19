@@ -205,37 +205,33 @@ public class HistoryGenerator {
                             (int) Math.max(0, Duration.between(deadline, departure).toMinutes()), "FAILED"});
                     }
                 }
-                if (failed) {
-                    addIncident(incidentCodes.pop(), "FAILED_DELIVERY", "HIGH", tripId, vehicleId,
-                        "Delivery failed at " + name + " (TR-" + codeNo + " stop " + seq + ")", departure, dispatchers,
-                        "Customer contacted; re-attempt booked for next day");
-                }
                 prev = loc;
                 seq++;
             }
         }
         Instant actualEnd = actualClock;
         int score = Math.min(100, (breakdown ? 60 : 0) + Math.min(45, worstLate * 3 / 2) + (failedStops > 0 ? 15 : 0));
-        String band = score >= 75 ? "CRITICAL" : score >= 50 ? "HIGH" : score >= 25 ? "MEDIUM" : "LOW";
+        // The trip's light at its end: Needs action if it broke down or ran properly late, Watch if slightly late or a stop failed.
+        String band = breakdown || worstLate >= 5 ? "HIGH" : worstLate > 0 || failedStops > 0 ? "MEDIUM" : "LOW";
         tripRows.add(new Object[] {tripId, "TR-" + codeNo, w.id(), vehicleId, driverId, "COMPLETED", ts(plannedStart),
             ts(plannedClock), ts(actualStart), ts(actualEnd), totalWeight, score, band, ts(actualEnd), "system", ts(plannedStart.minus(Duration.ofHours(14)))});
         assignmentRows.add(new Object[] {tripId, vehicleId, driverId, "Initial assignment", "dispatcher", ts(plannedStart.minus(Duration.ofHours(14)))});
 
-        if (lateCount > 0 && random.nextDouble() < 0.8) {
+        if (worstLate >= 5 && random.nextDouble() < 0.8) {
             Instant detected = actualEnd.minus(Duration.ofMinutes(40 + random.nextInt(60)));
-            addIncident(incidentCodes.pop(), "SLA_RISK", worstLate > 25 ? "CRITICAL" : "HIGH", tripId, vehicleId,
+            addIncident(incidentCodes.pop(), "SLA_RISK", "HIGH", tripId, vehicleId,
                 lateCount + " deliveries projected late on TR-" + codeNo + " towards " + lastTown, detected, dispatchers,
                 "Customers informed of revised arrival; driver confirmed");
         }
         if (breakdown) {
             Instant detected = actualStart.plus(Duration.ofMinutes(50 + random.nextInt(40)));
-            addIncident(incidentCodes.pop(), "BREAKDOWN", "CRITICAL", tripId, vehicleId,
+            addIncident(incidentCodes.pop(), "BREAKDOWN", "HIGH", tripId, vehicleId,
                 "Vehicle broke down on TR-" + codeNo, detected, dispatchers, "Remaining stops moved to a replacement vehicle");
             maintenanceRows.add(new Object[] {vehicleId, "BREAKDOWN", "Breakdown during TR-" + codeNo, ts(detected),
                 ts(detected.plus(Duration.ofHours(6 + random.nextInt(30)))), "dispatcher"});
         } else if (random.nextDouble() < 0.03) {
             Instant detected = actualStart.plus(Duration.ofMinutes(30 + random.nextInt(60)));
-            addIncident(incidentCodes.pop(), random.nextBoolean() ? "ROUTE_DEVIATION" : "LOCATION_STALE", "MEDIUM", tripId, vehicleId,
+            addIncident(incidentCodes.pop(), random.nextBoolean() ? "ROUTE_DEVIATION" : "LOCATION_STALE", "HIGH", tripId, vehicleId,
                 "Vehicle on TR-" + codeNo + " needed checking", detected, dispatchers, "Driver confirmed diversion around road works");
         }
     }
@@ -244,7 +240,7 @@ public class HistoryGenerator {
                              Instant detected, List<String> dispatchers, String resolution) {
         String owner = dispatchers.get(random.nextInt(dispatchers.size()));
         Instant ack = detected.plus(Duration.ofMinutes(1 + random.nextInt(9)));
-        Instant resolved = ack.plus(Duration.ofMinutes(8 + random.nextInt(severity.equals("CRITICAL") ? 110 : 60)));
+        Instant resolved = ack.plus(Duration.ofMinutes(8 + random.nextInt(type.equals("BREAKDOWN") ? 110 : 60)));
         String code = "INC-" + codeNo;
         incidentRows.add(new Object[] {code, type, severity, "RESOLVED", tripId, vehicleId, title, ts(detected), ts(detected),
             ts(ack), owner, ts(resolved), resolution});

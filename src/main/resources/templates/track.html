@@ -2,53 +2,214 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
   <th:block th:replace="~{layout :: head('Track a shipment')}"></th:block>
-  <th:block th:replace="~{layout :: leafletCss}"></th:block>
+  <th:block th:if="${vehicleLat != null}"><th:block th:replace="~{layout :: leafletCss}"></th:block></th:block>
 </head>
-<body>
-<main class="track">
-  <section class="login-sheet track-sheet">
-    <div class="login-collar">
-      <span class="mark-p4" style="--s:40px" lang="pa" aria-hidden="true">ਸ<span>ੜ</span>ਕ</span>
-      <div><h1 class="sheet-title">Track a shipment</h1><p class="muted">Enter the tracking number and the PIN code of the delivery address.</p></div>
+<body class="login-body">
+<main class="trk">
+  <section class="trk-sheet">
+
+    <!-- Header. Once there is a result the search moves up here, small. -->
+    <div class="trk-top">
+      <div class="trk-brand">
+        <span class="mark-p4" style="--s:34px" lang="pa" aria-hidden="true">ਸ<span>ੜ</span>ਕ</span>
+        <div><span class="caps">Sadak</span><span class="small muted">Track a shipment</span></div>
+      </div>
+      <form th:if="${s != null}" method="post" action="/track" class="trk-search">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <input name="n" type="text" required th:value="${n}" aria-label="Tracking number" autocomplete="off" style="text-transform:uppercase">
+        <input name="pin" type="text" required pattern="\d{6}" maxlength="6" inputmode="numeric" th:value="${pin}" aria-label="Delivery PIN code" class="trk-pin">
+        <button class="btn btn-primary" type="submit">Track</button>
+      </form>
     </div>
 
-    <form method="post" action="/track" class="track-form">
-      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-      <div class="field"><label for="n">Tracking number</label><input id="n" name="n" required th:value="${n}" placeholder="FL4100123" autocomplete="off" style="text-transform:uppercase"></div>
-      <div class="field"><label for="pin">Delivery PIN code</label><input id="pin" name="pin" required pattern="\d{6}" maxlength="6" inputmode="numeric" placeholder="142001"></div>
-      <button class="btn btn-primary" type="submit">Track</button>
-    </form>
-    <div class="flash flash-error" role="alert" th:if="${problem}" th:text="${problem}">problem</div>
+    <!-- First visit, or nothing found: the search is the page. -->
+    <div th:if="${s == null}" class="trk-start">
+      <h1>Where's my parcel?</h1>
+      <p class="muted">Enter the tracking number from your receipt and the PIN code of the delivery address.</p>
+      <div class="flash flash-error" role="alert" th:if="${problem}" th:text="${problem}">problem</div>
+      <form method="post" action="/track">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <div class="field"><label for="n">Tracking number</label><input id="n" name="n" type="text" required th:value="${n}" placeholder="FL4100123" autocomplete="off" style="text-transform:uppercase"></div>
+        <div class="field"><label for="pin">Delivery PIN code</label><input id="pin" name="pin" type="text" required pattern="\d{6}" maxlength="6" inputmode="numeric" placeholder="142001" autocomplete="postal-code"></div>
+        <button class="btn btn-blue btn-block" type="submit"><svg class="icon"><use href="/img/icons.svg#i-package"></use></svg>Track parcel</button>
+      </form>
+      <p class="small muted" th:if="${demoMode}">Demo mode: all shipments are synthetic.</p>
+    </div>
 
-    <th:block th:if="${s != null}">
-      <div class="track-status">
-        <span class="caps" th:text="${s.trackingNo}">FL</span>
-        <h2 th:text="${s.status.label()}">Status</h2>
-        <p th:if="${s.status.name() == 'OUT_FOR_DELIVERY' and eta != null}">
-          Expected around <strong class="figure" style="font-size:28px" th:text="${@fmt.time(eta)}">--</strong>
-          <span th:if="${stopsBefore != null and stopsBefore > 0}" th:text="'· ' + ${stopsBefore} + ' stop' + (${stopsBefore == 1} ? '' : 's') + ' before yours'">x</span>
-        </p>
-        <p th:if="${s.status.name() == 'DELIVERED'}" th:text="'Delivered ' + ${@fmt.dateTime(s.deliveredAt)} + '.'">x</p>
-        <p th:if="${s.status.name() == 'FAILED'}">We could not deliver this time. The sender will arrange another attempt.</p>
-        <p th:if="${s.status.name() == 'CREATED' or s.status.name() == 'PLANNED'}" th:text="'Due by ' + ${@fmt.dateTime(s.deadline)} + '. It has not left the warehouse yet.'">x</p>
-        <dl class="facts">
-          <dt>To</dt><dd th:text="${town} + ' · ' + ${s.destPin}">town</dd>
-          <dt>From</dt><dd th:text="${s.originWarehouse.city}">city</dd>
-          <dt>Due by</dt><dd th:text="${@fmt.dateTime(s.deadline)}">t</dd>
-        </dl>
+    <th:block th:if="${s != null}" th:with="st=${s.status.name()}">
+      <div class="trk-body">
+        <!-- Status at a glance -->
+        <div class="trk-col">
+          <span class="caps muted" th:text="${s.trackingNo} + ' · from ' + ${warehouse.city}">FL · from</span>
+          <h1 class="trk-status" th:switch="${st}">
+            <span th:case="'CREATED'">Booked</span>
+            <span th:case="'PLANNED'">Leaves the warehouse soon</span>
+            <span th:case="'OUT_FOR_DELIVERY'">Out for delivery</span>
+            <span th:case="'DELIVERED'">Delivered</span>
+            <span th:case="'FAILED'">Not delivered this time</span>
+            <span th:case="*">Cancelled</span>
+          </h1>
+
+          <div class="trk-eta" th:if="${eta != null and st == 'OUT_FOR_DELIVERY'}">
+            <span class="muted">Arriving around</span><span class="figure" th:text="${@fmt.time(eta)}">--</span>
+          </div>
+          <div class="trk-eta" th:if="${st == 'DELIVERED'}">
+            <span class="muted">Delivered at</span><span class="figure" th:text="${@fmt.time(s.deliveredAt)}">--</span>
+          </div>
+
+          <p class="trk-pills">
+            <span th:if="${st == 'DELIVERED'}" class="pill" th:classappend="${lateMin > 0} ? 'pill-bad' : 'pill-ok'"
+                  th:text="${lateMin > 0} ? ('Delivered ' + ${lateMin} + ' min late') : 'Delivered on time'">x</span>
+            <span th:if="${st == 'CREATED' or st == 'PLANNED' or st == 'OUT_FOR_DELIVERY'}" class="pill" th:classappend="${lateMin > 0} ? 'pill-bad' : 'pill-ok'"
+                  th:text="${lateMin > 0} ? ('About ' + ${lateMin} + ' min late · due by ' + ${@fmt.when(s.deadline)}) : ('On time · due by ' + ${@fmt.when(s.deadline)})">x</span>
+            <span th:if="${st == 'FAILED' or st == 'CANCELLED'}" class="pill pill-ink" th:text="'Was due by ' + ${@fmt.when(s.deadline)}">x</span>
+          </p>
+
+          <p class="trk-sub" th:switch="${st}">
+            <span th:case="'CREATED'">It's waiting at the warehouse to be put on a truck.</span>
+            <span th:case="'PLANNED'" th:text="'It has a truck and a driver, and leaves ' + ${warehouse.city} + ' shortly.'">x</span>
+            <span th:case="'OUT_FOR_DELIVERY'"><th:block th:if="${stopsBefore != null}" th:text="${stopsBefore == 0} ? 'Yours is the next stop. ' : (${stopsBefore} + ' stop' + (${stopsBefore == 1} ? '' : 's') + ' before yours. ')">x</th:block><th:block th:if="${etaIn != null and etaIn > 0}" th:text="'About ' + ${etaIn >= 60 ? (etaIn / 60) + ' h ' + (etaIn % 60) + ' min' : etaIn + ' min'} + ' to go.'">x</th:block></span>
+            <span th:case="'DELIVERED'">Signed for at the address.</span>
+            <span th:case="'FAILED'" th:text="'The driver couldn\'t deliver it' + (${s.failureReason} != null ? ': ' + ${s.failureReason}.toLowerCase() : '') + '. The warehouse will arrange another attempt.'">x</span>
+            <span th:case="*">The sender cancelled this shipment.</span>
+          </p>
+          <p class="trk-sub small" th:if="${s.attempts > 0 and (st == 'CREATED' or st == 'PLANNED' or st == 'OUT_FOR_DELIVERY')}"
+             th:text="'This is attempt ' + (${s.attempts} + 1) + '.'">x</p>
+
+          <ol class="trk-steps">
+            <li th:each="p : ${steps}" th:class="${p.state}"><b th:text="${p.label}">step</b><span class="small muted num" th:text="${p.at != null} ? ${@fmt.when(p.at)} : '—'">t</span></li>
+          </ol>
+
+          <dl class="trk-facts">
+            <dt>To</dt><dd th:text="${town} + ' · ' + ${s.destPin}">town</dd>
+            <dt>From</dt><dd th:text="${warehouse.name}">wh</dd>
+            <dt>Due by</dt><dd th:text="${@fmt.dateTime(s.deadline)}">t</dd>
+            <th:block th:if="${s.customerNote != null}"><dt>Your note</dt><dd th:text="'“' + ${s.customerNote} + '”'">note</dd></th:block>
+          </dl>
+        </div>
+
+        <!-- Map, or what stands in for it -->
+        <div class="trk-col trk-mapcol">
+          <th:block th:if="${vehicleLat != null}">
+            <div class="trk-map" data-track-map
+                 th:attr="data-vlat=${vehicleLat},data-vlng=${vehicleLng},data-dlat=${s.destLat},data-dlng=${s.destLng},data-todo=${todoLine},data-left=${etaIn != null and etaIn > 0 ? (etaIn >= 60 ? '~' + (etaIn / 60) + ' h ' + (etaIn % 60) + ' min' : '~' + etaIn + ' min') : null}"></div>
+            <div class="trk-legend"><span><i class="dot"></i>Your truck is somewhere in here</span><span><i class="dash"></i>Road to your address</span><span class="you">★ You</span></div>
+            <p class="small muted">The truck's exact position isn't shown publicly. Other customers' stops aren't marked.</p>
+          </th:block>
+          <div th:if="${vehicleLat == null}" class="trk-nomap">
+            <svg class="icon icon-lg"><use th:href="${st == 'DELIVERED'} ? '/img/icons.svg#i-circle-check' : (${st == 'OUT_FOR_DELIVERY'} ? '/img/icons.svg#i-truck' : '/img/icons.svg#i-warehouse')"></use></svg>
+            <p th:switch="${st}">
+              <span th:case="'DELIVERED'" th:text="'Delivered to ' + ${town} + ' · ' + ${s.destPin} + '.'">x</span>
+              <span th:case="'OUT_FOR_DELIVERY'">The truck's position will show here as soon as it reports in.</span>
+              <span th:case="*" th:text="'The map appears once the truck leaves ' + ${warehouse.city} + '.'">x</span>
+            </p>
+          </div>
+        </div>
       </div>
-      <div th:if="${vehicleLat != null}" class="track-map" data-track-map
-           th:attr="data-vlat=${vehicleLat},data-vlng=${vehicleLng},data-dlat=${s.destLat},data-dlng=${s.destLng}"></div>
-      <ol class="timeline" th:if="${!events.isEmpty()}" style="margin-top:16px">
-        <li th:each="e : ${events}" data-state="COMPLETED"><span class="node"></span>
-          <div class="t-head"><span th:text="${@fmt.humanize(e.toStatus)}">st</span><span class="small muted num" th:text="${@fmt.dateTime(e.changedAt)}">t</span></div></li>
-      </ol>
+
+      <!-- Help -->
+      <section class="trk-help" data-help th:attr="data-open=${helpOpen}">
+        <h2>Need help with this delivery?</h2>
+        <p class="muted">Pick what fits. Notes go to the driver's phone; problems go to the warehouse desk.</p>
+
+        <div class="flash flash-ok" role="status" th:if="${helpOk}" th:text="${helpOk}">ok</div>
+        <div class="flash flash-error" role="alert" th:if="${helpError}" th:text="${helpError}">err</div>
+
+        <!-- An existing complaint: its progress, shown every time -->
+        <div class="trk-complaint" th:if="${complaint != null}">
+          <span class="caps muted" th:text="'Complaint ' + ${complaint.code} + ' · ' + ${complaint.category.label()}">SR</span>
+          <ol class="trk-csteps">
+            <li class="done"><b>Received</b> <span class="small muted" th:text="${@fmt.when(complaint.createdAt)}">t</span></li>
+            <li th:class="${complaint.takenAt != null} ? (${complaint.status.name() == 'RESOLVED'} ? 'done' : 'now') : 'todo'"><b>Being looked at</b>
+              <span class="small muted" th:if="${complaint.takenAt != null}" th:text="${@fmt.when(complaint.takenAt)} + ' · by the ' + ${warehouse.city} + ' desk'">t</span></li>
+            <li th:class="${complaint.status.name() == 'RESOLVED'} ? 'done' : 'todo'"><b>Resolved</b>
+              <span class="small muted" th:if="${complaint.resolvedAt != null}" th:text="${@fmt.when(complaint.resolvedAt)}">t</span></li>
+          </ol>
+          <p class="trk-reply" th:if="${complaint.reply != null}" th:text="'“' + ${complaint.reply} + '”'">reply</p>
+          <p class="small muted" th:if="${complaint.open}" th:text="'We\'ll call you on ' + ${complaint.maskedPhone()} + '.'">call</p>
+        </div>
+
+        <div class="trk-options" role="tablist" aria-label="Help options">
+          <button type="button" class="trk-opt" data-help-tab="note" role="tab">
+            <svg class="icon"><use href="/img/icons.svg#i-file-text"></use></svg>
+            <b th:text="${s.customerNote != null} ? 'Change your note for the driver' : 'Leave a note for the driver'">Leave a note</b>
+            <span class="small muted">"Leave it with the shop next door", "Call when you reach the gate"</span>
+          </button>
+          <button type="button" class="trk-opt" data-help-tab="call" role="tab">
+            <svg class="icon"><use href="/img/icons.svg#i-phone"></use></svg>
+            <b th:text="'Call the ' + ${warehouse.city} + ' desk'">Call the desk</b>
+            <span class="small muted" th:text="${warehouse.deskPhone != null and deskHours != null} ? ${warehouse.deskPhone} + ' · ' + ${deskHours} + '. They can reach the driver.' : 'They can reach the driver.'">x</span>
+          </button>
+          <button type="button" class="trk-opt" data-help-tab="problem" role="tab">
+            <svg class="icon"><use href="/img/icons.svg#i-triangle-alert"></use></svg>
+            <b>Report a problem</b>
+            <span class="small muted">Late, damaged, not received, wrong address…</span>
+          </button>
+        </div>
+
+        <!-- Note for the driver -->
+        <form class="trk-panel" data-help-panel="note" method="post" action="/track/note" hidden>
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <input type="hidden" name="n" th:value="${s.trackingNo}"><input type="hidden" name="pin" th:value="${s.destPin}">
+          <th:block th:if="${canNote}">
+            <label for="note">Note for the driver</label>
+            <textarea id="note" name="note" rows="3" th:attr="maxlength=${noteMax}" data-count="#note-count"
+                      placeholder="Where to leave it, who can receive it, when to call"
+                      th:text="${draftNote != null} ? ${draftNote} : ${s.customerNote}"></textarea>
+            <div class="trk-row"><span class="small muted" id="note-count" th:text="'Up to ' + ${noteMax} + ' characters'">count</span>
+              <button class="btn btn-primary" type="submit">Save note</button></div>
+            <p class="small muted">The driver sees it at your stop. Leave it empty and save to remove it.</p>
+          </th:block>
+          <p th:unless="${canNote}" class="muted" style="margin:0">Notes can't be changed once a delivery is finished. Call the desk instead.</p>
+        </form>
+
+        <!-- Desk phone -->
+        <div class="trk-panel" data-help-panel="call" hidden>
+          <th:block th:if="${warehouse.deskPhone != null}">
+            <b th:text="${warehouse.name} + ' desk'">desk</b>
+            <div class="trk-phone" th:text="${warehouse.deskPhone}">phone</div>
+            <span class="pill" th:classappend="${deskOpen} ? 'pill-ok' : 'pill-ink'"
+                  th:text="${deskOpen} ? ('Open now · ' + ${deskHours}) : ('Closed · opens ' + ${deskOpens})">open</span>
+            <div class="trk-row" style="justify-content:flex-start">
+              <a class="btn btn-blue" th:href="'tel:' + ${#strings.replace(warehouse.deskPhone, ' ', '')}"><svg class="icon"><use href="/img/icons.svg#i-phone"></use></svg>Call the desk</a>
+              <span class="small muted" th:text="'Have your tracking number ready: ' + ${s.trackingNo}">x</span>
+            </div>
+            <p class="small" th:unless="${deskOpen}">Outside opening hours, use <b>Report a problem</b> and the desk will call you back when it opens.</p>
+          </th:block>
+          <p th:if="${warehouse.deskPhone == null}" style="margin:0">This warehouse hasn't added a desk number yet. Use <b>Report a problem</b> and they'll call you back.</p>
+        </div>
+
+        <!-- Report a problem -->
+        <form class="trk-panel" data-help-panel="problem" method="post" action="/track/complaint" hidden>
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <input type="hidden" name="n" th:value="${s.trackingNo}"><input type="hidden" name="pin" th:value="${s.destPin}">
+          <th:block th:if="${complaint == null or !complaint.open}">
+            <fieldset class="trk-chips"><legend>What went wrong?</legend>
+              <label th:each="c : ${categories}" class="chip"><input type="radio" name="category" th:value="${c.name()}" required
+                     th:checked="${draft != null and draft.category == c.name()}"><span th:text="${c.label()}">c</span></label>
+            </fieldset>
+            <label for="msg">Tell us more</label>
+            <textarea id="msg" name="message" rows="3" maxlength="500" required th:text="${draft != null} ? ${draft.message} : ''"></textarea>
+            <div class="trk-two">
+              <div><label for="cb">Phone number for a call back</label><input id="cb" name="phone" type="tel" required inputmode="tel" autocomplete="tel" placeholder="98765 43210" th:value="${draft != null} ? ${draft.phone} : ''"></div>
+              <div class="trk-two-btn"><button class="btn btn-blue btn-block" type="submit">Send to the warehouse desk</button></div>
+            </div>
+            <p class="small muted" style="margin:0">Your number is only shown to Sadak staff.</p>
+          </th:block>
+          <p th:if="${complaint != null and complaint.open}" style="margin:0" th:text="'You already have an open complaint, ' + ${complaint.code} + '. Its progress is shown above.'">x</p>
+        </form>
+
+        <div class="trk-faq">
+          <details><summary>I won't be home. What happens?</summary><p>Leave a note for the driver with where to leave it or who can receive it. If nobody is there, the driver records a failed attempt and the warehouse arranges another one.</p></details>
+          <details><summary>Can I change the delivery address?</summary><p>Not from this page. Call the warehouse desk before the parcel is out for delivery.</p></details>
+          <details><summary>Why is the truck's position approximate?</summary><p>So the driver's exact location isn't public. It's accurate to about a kilometre.</p></details>
+        </div>
+      </section>
     </th:block>
-    <p class="small muted" style="margin-top:20px">Demo service: all shipments are synthetic. <a href="/login">Staff sign in</a></p>
   </section>
+  <p class="small muted trk-foot" th:if="${s != null and demoMode}">Demo mode: all shipments are synthetic.</p>
 </main>
-<script th:if="${vehicleLat != null}" src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script th:if="${vehicleLat != null}" src="/js/sheetmap.js"></script>
-<script th:if="${vehicleLat != null}" src="/js/track.js"></script>
+<th:block th:if="${vehicleLat != null}"><th:block th:replace="~{layout :: leafletJs}"></th:block></th:block>
+<script src="/js/track.js"></script>
 </body>
 </html>

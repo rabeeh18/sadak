@@ -121,10 +121,11 @@ public class Incident {
         return worse;
     }
 
+    /** "I'm on it": the person now handles this incident. */
     public void acknowledge(String by, Instant at) {
         requireOpen();
         if (status == IncidentStatus.DETECTED) {
-            status = IncidentStatus.ACKNOWLEDGED;
+            status = IncidentStatus.IN_PROGRESS;
             acknowledgedAt = at;
         }
         ownerUsername = by;
@@ -139,14 +140,6 @@ public class Incident {
             ownerUsername = by;
         }
         status = IncidentStatus.IN_PROGRESS;
-    }
-
-    public void escalate() {
-        requireOpen();
-        escalated = true;
-        if (severity != RiskBand.CRITICAL) {
-            severity = RiskBand.values()[severity.ordinal() + 1];
-        }
     }
 
     public void resolve(String resolution, Instant at) {

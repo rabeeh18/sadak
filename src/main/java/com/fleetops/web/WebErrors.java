@@ -25,7 +25,8 @@ public class WebErrors {
     @ExceptionHandler({BusinessRuleException.class, OptimisticLockingFailureException.class, DataIntegrityViolationException.class})
     public Object handle(RuntimeException e, HttpServletRequest request) {
         String message = message(e);
-        if (request.getRequestURI().startsWith("/api/")) {
+        String accept = request.getHeader("Accept");
+        if (request.getRequestURI().startsWith("/api/") || accept != null && accept.startsWith("application/json")) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", message));
         }
         RequestContextUtils.getOutputFlashMap(request).put("error", message);

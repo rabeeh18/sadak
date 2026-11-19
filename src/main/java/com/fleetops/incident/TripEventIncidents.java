@@ -48,7 +48,7 @@ public class TripEventIncidents {
         Trip trip = trips.findWithResourcesById(e.tripId()).orElseThrow();
         Vehicle v = trip.getVehicle();
         long remaining = trip.getStops().stream().filter(s -> !s.getStatus().isDone()).count();
-        incidents.detect(new IncidentService.Detection(e.tripId(), IncidentType.BREAKDOWN, RiskBand.CRITICAL,
+        incidents.detect(new IncidentService.Detection(e.tripId(), IncidentType.BREAKDOWN, RiskBand.HIGH,
             v.getRegistration() + " broke down on " + trip.getCode() + " with " + remaining + " stops remaining",
             e.note(), null, v));
     }
@@ -66,9 +66,7 @@ public class TripEventIncidents {
                     SlaBreachEvent.Kind.FAILED));
             }
         }
-        incidents.detect(new IncidentService.Detection(e.tripId(), IncidentType.FAILED_DELIVERY, RiskBand.HIGH,
-            "Delivery failed at " + stop.getName() + " (" + trip.getCode() + " stop " + stop.getSeq() + ")",
-            e.reason(), failed.isEmpty() ? null : failed.get(0), null));
+        // Not an incident: the parcel's warehouse desk sees it under "Coming back" and rebooks it.
     }
 
     @TransactionalEventListener

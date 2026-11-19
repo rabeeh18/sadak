@@ -4,7 +4,8 @@ package com.fleetops.security;
 public enum Role {
     ADMIN(1, "Admin"),
     DISPATCHER(2, "Dispatcher"),
-    DRIVER(3, "Driver");
+    DRIVER(3, "Driver"),
+    WAREHOUSE(4, "Warehouse");
 
     private final short id;
     private final String label;

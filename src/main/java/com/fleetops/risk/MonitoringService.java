@@ -64,6 +64,13 @@ public class MonitoringService {
     private final Map<String, Instant> activeConditions = new ConcurrentHashMap<>();
     private final Map<String, RiskBand> conditionSeverity = new ConcurrentHashMap<>();
 
+    /** Demo reset: forget the latest trip summaries and the conditions being tracked. */
+    public void forgetAll() {
+        latest.clear();
+        activeConditions.clear();
+        conditionSeverity.clear();
+    }
+
     public MonitoringService(LiveFleet live, TripRepository trips, ShipmentRepository shipments,
                              RiskEvaluationRepository evaluations, SlaBreachRepository breaches,
                              EtaCalculator etaCalculator, RiskEngine riskEngine, IncidentService incidents,
@@ -198,16 +205,16 @@ public class MonitoringService {
             return "Breakdown";
         }
         if (a.has("LOCATION_STALE")) {
-            return "Location stale";
+            return "GPS lost";
         }
         if (a.has("ROUTE_DEVIATION")) {
             return "Off route";
         }
         if (a.has("UNEXPECTED_STOP")) {
-            return "Stopped";
+            return "Stuck";
         }
         if (a.has("LONG_STOP")) {
-            return "Long stop";
+            return "Stuck";
         }
         if (lt.currentStopAt() != null) {
             return "At stop";
@@ -219,25 +226,23 @@ public class MonitoringService {
 
     private void raiseIncidents(LiveTrip lt, Outcome o, Instant now) {
         RiskAssessment a = o.assessment();
-        RiskBand slaFrom = RiskBand.valueOf(settings.get("incident.sla-min-band"));
-        boolean slaRisk = a.band().atLeast(slaFrom) && (a.has("PROJECTED_LATE") || a.has("DEADLINE_PRESSURE"));
-        condition(lt, IncidentType.SLA_RISK, slaRisk, a.band(),
-            () -> (a.shipmentsLate() > 0 ? a.shipmentsLate() + " deliveries projected late" : a.shipmentsAtRisk() + " deliveries close to deadline")
-                + " on " + o.tripCode() + (a.worstLateMinutes() > 0 ? " (worst +" + a.worstLateMinutes() + " min)" : ""),
-            a.explanation(), now);
+        // Every problem that needs action is an incident; heads-ups (Watch) only show on the trip.
+        condition(lt, IncidentType.SLA_RISK, a.has("PROJECTED_LATE"), RiskBand.HIGH,
+            () -> a.shipmentsLate() + (a.shipmentsLate() == 1 ? " parcel" : " parcels") + " will be late on " + o.tripCode()
+                + " (worst " + a.worstLateMinutes() + " min after the promised time)",
+            detail(a, "PROJECTED_LATE"), now);
 
         condition(lt, IncidentType.LOCATION_STALE, a.has("LOCATION_STALE"), RiskBand.HIGH,
-            () -> lt.registration + " has stopped reporting its location", detail(a, "LOCATION_STALE"), now);
+            () -> lt.registration + " has stopped sending its position", detail(a, "LOCATION_STALE"), now);
 
         boolean deviated = a.has("ROUTE_DEVIATION");
-        double threshold = settings.rule("ROUTE_DEVIATION").threshold();
-        condition(lt, IncidentType.ROUTE_DEVIATION, deviated, lt.offRouteMeters() > threshold * 3 ? RiskBand.HIGH : RiskBand.MEDIUM,
-            () -> lt.registration + " is off its planned route", detail(a, "ROUTE_DEVIATION"), now);
+        condition(lt, IncidentType.ROUTE_DEVIATION, deviated, RiskBand.HIGH,
+            () -> lt.registration + " has left its planned road", detail(a, "ROUTE_DEVIATION"), now);
 
         boolean longStop = a.has("LONG_STOP") || a.has("UNEXPECTED_STOP");
-        condition(lt, IncidentType.LONG_STOP, longStop, RiskBand.MEDIUM,
-            () -> a.has("UNEXPECTED_STOP") ? lt.registration + " stopped away from any delivery stop"
-                : lt.registration + " is taking longer than planned at a stop",
+        condition(lt, IncidentType.LONG_STOP, longStop, RiskBand.HIGH,
+            () -> a.has("UNEXPECTED_STOP") ? lt.registration + " is not moving, away from any delivery stop"
+                : lt.registration + " is stuck at a stop for longer than planned",
             a.has("LONG_STOP") ? detail(a, "LONG_STOP") : detail(a, "UNEXPECTED_STOP"), now);
     }
 

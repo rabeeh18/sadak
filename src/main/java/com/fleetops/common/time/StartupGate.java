@@ -27,6 +27,15 @@ public class StartupGate {
         open = enabled;
     }
 
+    /** Holds the scheduled jobs while the demo is being reset. */
+    public void close() {
+        open = false;
+    }
+
+    public void reopen() {
+        open = enabled;
+    }
+
     public boolean isOpen() {
         return open;
     }

@@ -51,6 +51,12 @@ public class LiveFleet {
         this.clock = clock;
     }
 
+    /** Demo reset: forget every live trip; {@link #loadAll()} reads them again. */
+    public void forgetAll() {
+        byTrip.clear();
+        tripByVehicle.clear();
+    }
+
     @EventListener(ApplicationReadyEvent.class)
     @Order(10)
     @Transactional(readOnly = true)

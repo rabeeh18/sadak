@@ -1,5 +1,6 @@
 package com.fleetops.incident;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -21,12 +22,18 @@ public interface IncidentRepository extends JpaRepository<Incident, Long> {
     @Query("""
         select i from Incident i
         where i.status <> com.fleetops.incident.IncidentStatus.RESOLVED
-        order by case i.severity when com.fleetops.trip.RiskBand.CRITICAL then 0
-                                 when com.fleetops.trip.RiskBand.HIGH then 1
-                                 when com.fleetops.trip.RiskBand.MEDIUM then 2 else 3 end,
+        order by case i.status when com.fleetops.incident.IncidentStatus.DETECTED then 0 else 1 end,
                  i.detectedAt asc
         """)
     List<Incident> findOpenBySeverity();
+
+    @EntityGraph(attributePaths = {"trip"})
+    @Query("""
+        select i from Incident i
+        where i.status = com.fleetops.incident.IncidentStatus.RESOLVED and i.resolvedAt >= :since
+        order by i.resolvedAt desc
+        """)
+    List<Incident> closedSince(Instant since, org.springframework.data.domain.Pageable page);
 
     @EntityGraph(attributePaths = {"trip", "vehicle", "shipment"})
     @Query("""

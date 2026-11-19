@@ -1,10 +1,7 @@
 package com.fleetops.common.time;
 
-import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 
 import org.springframework.stereotype.Component;
 
@@ -74,26 +71,6 @@ public class OperationalClock {
         this.anchorSim = anchorSim.plus(by);
     }
 
-    /** A java.time view of this clock, for APIs that take a {@link Clock}. */
-    public Clock asClock() {
-        OperationalClock self = this;
-        return new Clock() {
-            @Override
-            public ZoneId getZone() {
-                return ZoneOffset.UTC;
-            }
-
-            @Override
-            public Clock withZone(ZoneId zone) {
-                return this;
-            }
-
-            @Override
-            public Instant instant() {
-                return self.now();
-            }
-        };
-    }
 
     private void rebase() {
         this.anchorSim = now();

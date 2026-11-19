@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Complaints')}"></head>
+<body>
+<header th:replace="~{layout :: header(${me.warehouse} ? 'desk' : 'incidents')}"></header>
+<main class="page">
+  <a class="back" th:href="${me.warehouse} ? '/desk' : '/incidents'"><svg class="icon"><use href="/img/icons.svg#i-arrow-left"></use></svg><th:block th:text="${me.warehouse} ? 'Desk' : 'Incidents'">Back</th:block></a>
+  <div class="page-head">
+    <div><h1>Customer complaints</h1>
+      <p class="sub" th:text="${me.warehouse} ? 'Problems customers reported about parcels from your warehouse.' : 'Problems customers reported on the tracking page. Each warehouse desk handles its own; ones sent to dispatch need you.'">sub</p></div>
+  </div>
+  <th:block th:replace="~{layout :: flash}"></th:block>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Open</h2><span class="small muted" th:text="${open.size()} + ' open'">0</span></div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Complaint</th><th>Parcel</th><th th:unless="${me.warehouse}">Warehouse</th><th>Status</th><th>Reported</th></tr></thead>
+        <tbody>
+          <tr th:each="c : ${open}" th:attr="data-href=@{/complaints/{id}(id=${c.id})}">
+            <td><a th:href="@{/complaints/{id}(id=${c.id})}" style="font-weight:600" th:text="${c.code} + ' · ' + ${c.category.label()}">SR</a>
+              <span class="sub" th:text="'“' + ${c.message} + '”'">msg</span></td>
+            <td><span th:text="${c.shipment.trackingNo}">FL</span><span class="sub" th:if="${c.shipment.trip != null}" th:text="${c.shipment.trip.code}">TR</span></td>
+            <td th:unless="${me.warehouse}" th:text="${warehouseNames[c.warehouseId]}">wh</td>
+            <td><span th:if="${c.status.name() == 'NEW'}" class="tag tag-red">New</span>
+              <span th:if="${c.status.name() == 'IN_PROGRESS'}" class="tag tag-ochre" th:text="'With ' + (${names[c.handledBy]} ?: ${c.handledBy})">taken</span>
+              <span th:if="${c.sentToDispatch}" class="tag tag-blue">Sent to dispatch</span></td>
+            <td class="num" th:text="${@fmt.ago(c.createdAt)}">t</td>
+          </tr>
+          <tr th:if="${open.isEmpty()}"><td colspan="5"><div class="empty"><strong>All clear</strong>No open complaints.</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Recently resolved</h2></div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Complaint</th><th>Parcel</th><th th:unless="${me.warehouse}">Warehouse</th><th>Reply to the customer</th><th>Resolved</th></tr></thead>
+        <tbody>
+          <tr th:each="c : ${resolved}" th:attr="data-href=@{/complaints/{id}(id=${c.id})}">
+            <td><a th:href="@{/complaints/{id}(id=${c.id})}" th:text="${c.code} + ' · ' + ${c.category.label()}">SR</a></td>
+            <td th:text="${c.shipment.trackingNo}">FL</td>
+            <td th:unless="${me.warehouse}" th:text="${warehouseNames[c.warehouseId]}">wh</td>
+            <td class="small" th:text="${c.reply}">reply</td>
+            <td class="num" th:text="${@fmt.when(c.resolvedAt)} + ' · ' + (${names[c.handledBy]} ?: ${c.handledBy})">t</td>
+          </tr>
+          <tr th:if="${resolved.isEmpty()}"><td colspan="5"><div class="empty">Nothing resolved yet.</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<th:block th:replace="~{layout :: scripts}"></th:block>
+</body>
+</html>

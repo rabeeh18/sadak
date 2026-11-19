@@ -11,9 +11,13 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.fleetops.common.time.OperationalClock;
+import com.fleetops.config.AppMode;
 import com.fleetops.settings.SettingsService;
 
-/** Restores the simulation clock on start-up and saves it periodically, so simulated time survives restarts. */
+/**
+ * Demo: restores the simulation clock on start-up and saves it periodically, so simulated time
+ * survives restarts. Production: the clock is real time at 1x and cannot be changed.
+ */
 @Component
 public class ClockKeeper {
 
@@ -21,17 +25,24 @@ public class ClockKeeper {
 
     private final OperationalClock clock;
     private final SettingsService settings;
+    private final AppMode mode;
     private volatile boolean restored;
 
-    public ClockKeeper(OperationalClock clock, SettingsService settings) {
+    public ClockKeeper(OperationalClock clock, SettingsService settings, AppMode mode) {
         this.clock = clock;
         this.settings = settings;
+        this.mode = mode;
     }
 
     @EventListener(ApplicationReadyEvent.class)
     @Order(0)
     public void restore() {
         settings.reload();
+        if (!mode.demo()) {
+            clock.restore(Instant.now(), 1, false);
+            log.info("Operational clock on real time");
+            return;
+        }
         String saved = settings.get("sim.clock");
         Instant savedAt = saved.isBlank() ? null : Instant.parse(saved);
         clock.restore(savedAt, settings.getDouble("sim.speed"), settings.getBoolean("sim.paused"));

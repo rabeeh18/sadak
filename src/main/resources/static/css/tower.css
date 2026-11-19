@@ -20,7 +20,8 @@
 .lg-wh { width: 10px; height: 10px; background: var(--contour); }
 .lg-veh { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 12px solid currentColor; }
 .lg-veh.band-LOW { color: #4f9a4f; }
-.lg-veh.band-HIGH { color: #e0731f; }
+.lg-veh.band-MEDIUM { color: #e3bd2c; }
+.lg-veh.band-HIGH { color: #d8351b; }
 .lg-veh.band-CRITICAL { color: #d8351b; }
 .lg-live { margin-left: auto; color: var(--ink-3); }
 .lg-live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); }
@@ -32,21 +33,29 @@ html[data-live="on"] .lg-live::before { background: var(--forest); }
 .side-scroll { flex: 1; min-height: 0; overflow: auto; }
 .side-scroll[hidden] { display: none; }
 
-.trip-index td { padding: 7px 8px; }
-.trip-index th { padding: 7px 8px; }
+/* Fits the panel at any width: the small columns are fixed, Trip takes the rest, long text truncates. */
+.trip-index { width: 100%; table-layout: fixed; }
+.trip-index th:nth-child(1) { width: 96px; }
+.trip-index th:nth-child(3) { width: 76px; }
+.trip-index th:nth-child(4) { width: 90px; }
+.trip-index th:nth-child(5) { width: 34px; }
+.trip-index td { padding: 7px 6px; overflow: hidden; }
+.trip-index th { padding: 7px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .trip-index tr { cursor: pointer; }
 .trip-index tr[aria-selected="true"] { background: var(--survey-blue-tint); }
 .trip-index .code { font-weight: 700; }
-.trip-index .route { display: block; color: var(--ink-3); font-size: 12px; max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trip-index .route { display: block; color: var(--ink-3); font-size: 12px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .trip-index .dev { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .trip-index .dev.late { color: var(--road); }
-.trip-index .cond { white-space: nowrap; font-size: 12px; }
+.trip-index .cond { white-space: nowrap; font-size: 12px; text-overflow: ellipsis; }
+.trip-index .cond .bar { width: 100%; }
+.side-scroll { overflow-x: hidden; }
 .trip-index .cond .bar { margin-top: 4px; }
 .trip-index tr.is-planned td { color: var(--ink-3); }
 
 .cond-tag { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
-.cond-Breakdown, .cond-Off-route, .cond-Location-stale { color: var(--road); }
-.cond-Stopped, .cond-Long-stop, .cond-Running-late { color: var(--orange); }
+.cond-Breakdown, .cond-Off-route, .cond-GPS-lost, .cond-Stuck { color: var(--road); }
+.cond-Running-late { color: var(--orange); }
 .cond-At-stop { color: var(--survey-blue); }
 .cond-Driving { color: var(--ink-2); }
 
@@ -60,7 +69,7 @@ html[data-live="on"] .lg-live::before { background: var(--forest); }
 
 /* Selected trip */
 .detail-head { padding: 12px 14px; border-bottom: 1px solid var(--rule); display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: start; }
-.detail-head h2 { font-size: 20px; font-weight: 800; font-variation-settings: "wdth" 95; }
+.detail-head h2 { font-size: 20px; font-weight: 800; font-variation-settings: "wdth" 95; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .detail-head .route { color: var(--ink-3); font-size: 13px; }
 .detail-head .spot { font-size: 30px; }
 .detail-head .spot svg { width: 16px; height: 16px; }
@@ -85,3 +94,18 @@ html[data-live="on"] .lg-live::before { background: var(--forest); }
   .tower-sheet { height: 60vh; }
   .tower-side { max-height: none; }
 }
+
+/* Status column: the light, with the main problem under it. */
+.trip-index .light { font-size: 11px; padding: 1px 6px; }
+.trip-index td > .sub { display: block; margin-top: 3px; font-size: 11px; color: var(--ink-3); white-space: normal; line-height: 1.25; }
+/* An open incident in the trip panel, with its one main fix. */
+.inc-card { margin-top: 12px; padding: 10px 12px; background: #fff; border: 1px solid var(--road); border-left-width: 4px; }
+.inc-card.is-taken { border-color: var(--ochre); }
+.inc-card .inc-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.inc-card .inc-top .caps { color: var(--road); }
+.inc-card.is-taken .inc-top .caps { color: var(--ochre); }
+.inc-card p { margin: 6px 0 10px; font-size: 13px; }
+.inc-note { display: flex; gap: 6px; margin-top: 8px; }
+.inc-note input { flex: 1; min-width: 0; font-size: 13px; padding: 5px 8px; }
+.inc-card .btn-danger { background: var(--road); color: #fff; }
+.inc-card .btn-danger:hover { background: #9c2a17; }

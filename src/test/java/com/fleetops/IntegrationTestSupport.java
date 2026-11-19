@@ -49,9 +49,9 @@ public abstract class IntegrationTestSupport {
     @BeforeEach
     void cleanDatabase() {
         jdbc.execute("""
-            truncate table incident_actions, incidents, notifications, audit_log, status_history, risk_evaluations,
+            truncate table complaints, incident_actions, incidents, notifications, audit_log, status_history, risk_evaluations,
                 sla_breach_events, vehicle_locations, delivery_proofs, shipments, trip_assignments, route_versions,
-                trip_stops, trips, maintenance_records, drivers, vehicles, warehouses, user_roles, users restart identity cascade""");
+                trip_stops, trips, maintenance_records, drivers, vehicles, warehouses, user_tokens, user_roles, users restart identity cascade""");
         settings.reload();
         clock.restore(Instant.now(), 1, true);
     }
@@ -78,6 +78,6 @@ public abstract class IntegrationTestSupport {
     }
 
     protected UserAccount account(String username, Role role) {
-        return users.save(new UserAccount(username, encoder.encode("test-password-123"), username, EnumSet.of(role)));
+        return users.save(new UserAccount(username, username + "@test.example", encoder.encode("test-password-123"), username, EnumSet.of(role)));
     }
 }

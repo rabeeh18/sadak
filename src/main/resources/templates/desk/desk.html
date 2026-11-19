@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Warehouse desk')}"></head>
+<body>
+<header th:replace="~{layout :: header('desk')}"></header>
+<main class="page">
+  <div class="page-head">
+    <div>
+      <span class="caps muted" th:text="${w.code} + ' · ' + ${w.city}">PTA · Patiala</span>
+      <h1>Warehouse desk</h1>
+      <p class="sub" th:text="'Today\'s departures, returns, and what customers are asking about. As of ' + ${@fmt.time(now)} + '.'">sub</p>
+    </div>
+    <div class="desk-phone">
+      <div><span class="small muted">Desk phone shown to customers</span>
+        <div class="desk-phone-no" th:text="${w.deskPhone ?: 'Not set'}">phone</div></div>
+      <span th:if="${w.deskPhone != null}" class="pill" th:classappend="${deskOpen} ? 'pill-ok' : 'pill-ink'"
+            th:text="(${deskOpen} ? 'Open · ' : 'Closed · ') + ${w.deskOpens} + '–' + ${w.deskCloses}">open</span>
+      <details class="row-actions"><summary class="btn btn-sm btn-quiet">Edit</summary>
+        <div class="row-actions-pop" style="width:280px;right:0;left:auto">
+          <form method="post" action="/desk/phone">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div class="field"><label for="dp">Desk phone</label><input id="dp" name="phone" type="tel" required th:value="${w.deskPhone}" placeholder="0175 230 1234"></div>
+            <div class="form-grid" style="grid-template-columns:1fr 1fr">
+              <div class="field"><label for="do">Opens</label><input id="do" name="opens" type="time" required th:value="${w.deskOpens ?: '09:00'}"></div>
+              <div class="field"><label for="dc">Closes</label><input id="dc" name="closes" type="time" required th:value="${w.deskCloses ?: '19:00'}"></div>
+            </div>
+            <button class="btn btn-sm btn-primary" type="submit">Save</button>
+          </form>
+        </div>
+      </details>
+    </div>
+  </div>
+  <th:block th:replace="~{layout :: flash}"></th:block>
+
+  <section class="legend-strip" style="--cols:5;margin-bottom:16px" aria-label="Today at this warehouse">
+    <div class="legend-cell"><span class="figure" th:text="${departedToday}">0</span><span class="label">Departed today</span>
+      <span class="note" th:text="'of ' + ${departures.size()} + ' on the board'">x</span></div>
+    <div class="legend-cell"><span class="figure" th:text="${waiting.size()}">0</span><span class="label">Waiting to go out</span>
+      <span class="note" th:text="${dueSoon} + ' due within 4 hours'">x</span></div>
+    <div class="legend-cell" th:attr="data-tone=${failed.size() > 0} ? 'warn' : null"><span class="figure" th:text="${failed.size()}">0</span><span class="label">Coming back</span>
+      <span class="note">failed deliveries</span></div>
+    <div class="legend-cell" th:attr="data-tone=${openComplaints.size() > 0} ? 'alert' : null"><span class="figure" th:text="${openComplaints.size()}">0</span><span class="label">Open complaints</span>
+      <span class="note" th:text="${newComplaints} + ' not picked up'">x</span></div>
+    <div class="legend-cell"><span class="figure" th:text="${notes.size()}">0</span><span class="label">Notes from customers</span>
+      <span class="note">on parcels still to deliver</span></div>
+  </section>
+
+  <div class="grid-desk">
+    <div>
+      <section class="panel">
+        <div class="panel-head"><h2>Today's departures</h2><span class="small muted">Live from the control tower</span></div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>Trip</th><th>Truck · driver</th><th>Stops</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr th:each="t : ${departures}">
+                <td><strong th:text="${t.code}">TR</strong>
+                  <span class="sub" th:text="${t.actualStart != null} ? 'left ' + ${@fmt.time(t.actualStart)} : 'leaves ' + ${@fmt.time(t.plannedStart)}">t</span></td>
+                <td><span th:text="${t.vehicle.registration}">PB</span><span class="sub" th:text="${t.driver.fullName}">driver</span></td>
+                <td class="num"><span th:text="${t.completedStopCount()} + ' of ' + ${t.stops.size()} + ' done'">x</span>
+                  <div class="progress" style="height:5px;width:110px;margin-top:4px"><i th:style="'width:' + ${t.progressPercent()} + '%'"></i></div></td>
+                <td>
+                  <span th:if="${t.status.name() == 'COMPLETED'}" class="tag tag-ink" th:text="'Back ' + ${@fmt.time(t.actualEnd)}">back</span>
+                  <span th:if="${t.status.name() == 'PLANNED'}" class="tag tag-blue">Loading</span>
+                  <th:block th:if="${t.status.name() == 'IN_PROGRESS'}"><span th:replace="~{parts :: spot(${t.riskScore}, ${t.riskBand == null ? 'LOW' : t.riskBand.name()})}"></span></th:block>
+                </td>
+              </tr>
+              <tr th:if="${departures.isEmpty()}"><td colspan="4"><div class="empty"><strong>No departures yet today</strong>Trips planned from this warehouse appear here.</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Waiting to go out</h2>
+          <form th:if="${!waiting.isEmpty()}" method="post" action="/desk/ask-plan" class="panel-act">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button class="btn btn-sm btn-quiet" type="submit">Ask dispatch to plan</button></form></div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>Parcel</th><th>To</th><th>Due by</th><th></th></tr></thead>
+            <tbody>
+              <tr th:each="s, it : ${waiting}" th:if="${it.index < 8}">
+                <td><strong th:text="${s.trackingNo}">FL</strong><span class="sub" th:text="${s.weightKg} + ' kg'">kg</span></td>
+                <td th:text="${s.destName.split(' — ')[0]} + ' · ' + ${s.destPin}">to</td>
+                <td class="num" th:text="${@fmt.when(s.deadline)}">t</td>
+                <td><span class="tag tag-red" th:if="${s.deadline.isBefore(now)}">Overdue</span><span class="tag tag-orange" th:if="${!s.deadline.isBefore(now) and s.deadline.isBefore(now.plusSeconds(3 * 3600))}">Tight</span></td>
+              </tr>
+              <tr th:if="${waiting.size() > 8}"><td colspan="4" class="small"><a href="/desk/shipments?status=CREATED" th:text="'+ ' + (${waiting.size()} - 8) + ' more'">more</a></td></tr>
+              <tr th:if="${waiting.isEmpty()}"><td colspan="4"><div class="empty"><strong>Nothing waiting</strong>Booked parcels wait here until dispatch puts them on a trip.</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Coming back</h2><span class="small muted">Failed deliveries, for another attempt</span></div>
+        <div class="table-wrap">
+          <table class="data">
+            <tbody>
+              <tr th:each="s : ${failed}">
+                <td><strong th:text="${s.trackingNo}">FL</strong>
+                  <span class="sub" th:text="${s.destName.split(' — ')[0]} + (${s.trip != null} ? ' · on ' + ${s.trip.code} : '')">to</span></td>
+                <td><span th:text="'“' + (${s.failureReason} ?: 'No reason given') + '”'">reason</span>
+                  <span class="sub" th:if="${s.trip != null}" th:text="${s.trip.driver.fullName}">driver</span></td>
+                <td><span class="tag tag-ochre" th:text="'Attempt ' + ${s.attempts}">a</span></td>
+                <td class="r"><form method="post" th:action="@{/desk/shipments/{id}/rebook(id=${s.id})}">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                  <button class="btn btn-sm btn-quiet" type="submit">Rebook</button></form></td>
+              </tr>
+              <tr th:if="${failed.isEmpty()}"><td><div class="empty"><strong>Nothing coming back</strong>Parcels a driver couldn't deliver show up here.</div></td></tr>
+              <tr th:if="${olderFailed > 0}"><td colspan="4" class="small"><a href="/desk/shipments?status=FAILED" th:text="${olderFailed} + ' older failed parcel' + (${olderFailed == 1} ? '' : 's') + ' still waiting for another attempt'">older</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div>
+      <section class="panel">
+        <div class="panel-head"><h2>Customer complaints</h2><a class="small" href="/complaints">All complaints</a></div>
+        <div th:each="c, it : ${openComplaints}" class="cmp" th:classappend="${c.status.name() == 'NEW'} ? 'cmp-new'">
+          <div class="cmp-top">
+            <a th:href="@{/complaints/{id}(id=${c.id})}"><strong th:text="${c.code} + ' · ' + ${c.category.label()}">SR</strong></a>
+            <span th:if="${c.status.name() == 'NEW'}" class="tag tag-red" th:text="'New · ' + ${@fmt.ago(c.createdAt)}">new</span>
+            <span th:if="${c.status.name() == 'IN_PROGRESS'}" class="tag tag-ochre" th:text="(${names[c.handledBy]} ?: ${c.handledBy}) + ' · ' + ${@fmt.ago(c.takenAt)}">taken</span>
+            <span th:if="${c.sentToDispatch}" class="tag tag-blue">With dispatch</span>
+          </div>
+          <p class="cmp-msg" th:text="'“' + ${c.message} + '”'">msg</p>
+          <dl class="cmp-kv">
+            <dt>Parcel</dt><dd th:text="${c.shipment.trackingNo} + ' · ' + ${c.shipment.destName.split(' — ')[0]} + (${c.shipment.trip != null} ? ' · ' + ${c.shipment.trip.code} : '')">p</dd>
+            <dt>Call back</dt><dd><a th:href="'tel:' + ${c.callbackPhone}" th:text="${c.callbackPhone}"><b>phone</b></a></dd>
+            <th:block th:if="${c.shipment.trip != null}"><dt>Driver</dt><dd><span th:text="${c.shipment.trip.driver.fullName}">d</span>
+              <a th:if="${c.shipment.trip.driver.phone != null}" th:href="'tel:' + ${c.shipment.trip.driver.phone}" th:text="' · ' + ${c.shipment.trip.driver.phone}">p</a></dd></th:block>
+            <th:block th:if="${c.shipment.customerNote != null}"><dt>Their note</dt><dd th:text="'“' + ${c.shipment.customerNote} + '”'">n</dd></th:block>
+          </dl>
+          <form method="post" th:action="@{/complaints/{id}/resolve(id=${c.id})}" class="cmp-reply">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input type="hidden" name="back" value="/desk">
+            <textarea name="reply" rows="2" maxlength="500" required aria-label="Reply to the customer" placeholder="Reply to the customer (shown on their tracking page)"></textarea>
+            <div class="btn-row">
+              <button class="btn btn-sm btn-primary" type="submit">Reply &amp; resolve</button>
+              <button th:if="${c.status.name() == 'NEW'}" class="btn btn-sm btn-quiet" type="submit" formnovalidate
+                      th:formaction="@{/complaints/{id}/take(id=${c.id})}">I'm on it</button>
+              <button th:if="${!c.sentToDispatch}" class="btn btn-sm btn-quiet" type="submit" formnovalidate
+                      th:formaction="@{/complaints/{id}/dispatch(id=${c.id})}">Send to dispatch</button>
+            </div>
+          </form>
+        </div>
+        <div th:if="${openComplaints.isEmpty()}" class="empty"><strong>No open complaints</strong>Problems customers report on the tracking page land here.</div>
+        <div th:if="${!resolvedComplaints.isEmpty()}" class="cmp-done">
+          <span class="caps muted">Recently resolved</span>
+          <a th:each="c : ${resolvedComplaints}" th:href="@{/complaints/{id}(id=${c.id})}" class="small"
+             th:text="${c.code} + ' · ' + ${c.category.label()} + ' · ' + ${@fmt.when(c.resolvedAt)}">x</a>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Notes from customers</h2><span class="small muted">Drivers see these at the stop</span></div>
+        <div th:each="s : ${notes}" class="cmp">
+          <div class="cmp-top"><strong th:text="${s.trackingNo}">FL</strong>
+            <span class="small muted" th:text="${s.destName.split(' — ')[0]} + (${s.trip != null} ? ' · ' + ${s.trip.code} : ' · not on a trip yet')">x</span></div>
+          <p class="cmp-msg" th:text="'“' + ${s.customerNote} + '”'">note</p>
+        </div>
+        <div th:if="${notes.isEmpty()}" class="empty"><strong>No notes</strong>Customers can leave the driver a note on the tracking page.</div>
+      </section>
+    </div>
+  </div>
+</main>
+<th:block th:replace="~{layout :: scripts}"></th:block>
+</body>
+</html>

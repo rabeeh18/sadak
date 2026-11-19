@@ -42,3 +42,8 @@
 .drv-fail { margin-top: 12px; }
 .drv-fail summary { padding: 12px 0; font-weight: 600; color: var(--road); }
 .drv-share { margin-top: 14px; font-size: 15px; }
+/* A customer's note for the driver, written on the tracking page. */
+.drv-cnote { flex-basis: 100%; display: grid; gap: 2px; background: var(--ochre-tint); border: 1px solid #e2d18a; padding: 8px 10px; font-size: 14px; }
+.drv-cnote b { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ochre); }
+.drv-notes-count { color: var(--ochre); font-weight: 600; margin-top: 8px; }
+.drv-has-note { color: var(--ochre); font-weight: 600; }

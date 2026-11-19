@@ -13,7 +13,7 @@ The map is a **survey sheet**:
 - graticule ticks in the collar at every half degree (`75°30′E`);
 - **grid references everywhere**: trip rows, vehicles, stops and warehouses all show their square (`I10`), and it always matches the map.
 
-Supporting moves: risk scores are set as **spot heights** (a solid triangle plus a figure, coloured by band); KPI cells sit in a **legend strip** like a sheet's marginal legend; vehicle registrations sit in plate outlines.
+Supporting moves: every trip carries a **light**, a small pill in green (On track), yellow (Watch) or red (Needs action); KPI cells sit in a **legend strip** like a sheet's marginal legend; vehicle registrations sit in plate outlines.
 
 ## Tokens
 
@@ -42,7 +42,7 @@ One family, **Archivo** (variable: `wdth` 62–125, `wght` 100–900), used at t
 | Use | Setting |
 |---|---|
 | Sheet titles | 750 weight, `wdth` 125, uppercase, `letter-spacing: .14em` |
-| Figures (KPIs, ETAs, spot heights) | 800 weight, `wdth` 72, tabular numerals |
+| Figures (KPIs, ETAs) | 800 weight, `wdth` 72, tabular numerals |
 | UI and body | 400–650 weight, `wdth` 100, 14 px / 1.45 |
 | Table headers and labels | 650 weight, `wdth` 110, uppercase 11 px, `.07em` tracking |
 
@@ -52,18 +52,18 @@ Scale: 12 · 14 · 16 · 20 · 26 · 40 px. All numerals are tabular.
 
 - **Panels:** paper, 1 px ink border, square corners; the header row is separated by an ink rule. No shadows except on floating layers (popovers, toasts).
 - **Buttons:** square-ish (3 px radius), ink outline; primary = ink fill; blue = survey action (reassign); danger = road outline.
-- **Tags:** 1 px outline in the state colour; critical is the only solid fill.
+- **Tags:** 1 px outline in the state colour. The main fix button on an incident is the only solid red.
 - **Tables:** sticky uppercase headers on an ink rule, faint row rules, hover tint, rows link where a detail page exists.
 - **Timelines:** stops, route versions and incident actions as nodes on a hairline. Filled = done, blue ring = next, red = failed.
-- **Map symbols:** warehouse = brown square; vehicle = arrow rotated to heading in its risk colour (critical adds one rippling ring); stop = numbered circle; transfer stop = numbered square.
+- **Map symbols:** warehouse = brown square; vehicle = arrow rotated to heading in its light colour (Needs action adds one rippling ring); stop = numbered circle; transfer stop = numbered square.
 
 ## Motion
 
-One authored moment: vehicles **glide** between position fixes, and only critical vehicles ripple. Selecting a trip dims every other vehicle and route and flies the map to the trip. Everything else is a short ease-out on hover or press. `prefers-reduced-motion` turns animation off.
+One authored moment: vehicles **glide** between position fixes, and only vehicles that need action ripple. Selecting a trip dims every other vehicle and route and flies the map to the trip. Everything else is a short ease-out on hover or press. `prefers-reduced-motion` turns animation off.
 
 ## Rules for new screens
 
 - Start from the shell: `layout :: header`, `.page`, `.page-head`, `.panel`, `table.data`.
-- Colour only carries state. Do not decorate with the band colours.
+- Colour only carries state. Do not decorate with the light colours.
 - Any location a dispatcher might talk about gets its grid reference.
 - Every number with a definition says what it measures (see the Analytics notes).

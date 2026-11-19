@@ -75,7 +75,24 @@ class AccessControlIT extends IntegrationTestSupport {
             .andExpect(content().string(org.hamcrest.Matchers.containsString("could not find")));
         mvc.perform(post("/track").param("n", s.getTrackingNo()).param("pin", "142001").with(csrf()))
             .andExpect(status().isOk())
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("Awaiting planning")));
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("waiting at the warehouse to be put on a truck")));
+    }
+
+    @Test
+    void simulationControlsDoNotExistOutsideDemoMode() throws Exception {
+        mvc.perform(post("/api/sim/pause").with(user("x").roles("DISPATCHER")).with(csrf())).andExpect(status().isNotFound());
+        mvc.perform(post("/demo-login").param("as", "admin").with(csrf())).andExpect(status().isNotFound());
+        mvc.perform(get("/demo")).andExpect(status().isNotFound());
+        mvc.perform(get("/login")).andExpect(status().isOk())
+            .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("href=\"/demo\""))));
+    }
+
+    @Test
+    void signInPageOpensOnTrackingUnlessStaffIsAsked() throws Exception {
+        mvc.perform(get("/login")).andExpect(status().isOk())
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"pane-staff\" role=\"tabpanel\" aria-labelledby=\"tab-staff\" hidden")));
+        mvc.perform(get("/login").param("staff", "")).andExpect(status().isOk())
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"pane-track\" role=\"tabpanel\" aria-labelledby=\"tab-track\" hidden")));
     }
 
     @Test

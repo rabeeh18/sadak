@@ -63,10 +63,10 @@
 .sym-vehicle .sym-arrow path { fill: currentColor; stroke: var(--ink); stroke-width: 1.4; stroke-linejoin: round; }
 .sym-vehicle.band-LOW { color: #4f9a4f; }
 .sym-vehicle.band-MEDIUM { color: #e3bd2c; }
-.sym-vehicle.band-HIGH { color: #e0731f; }
+.sym-vehicle.band-HIGH { color: #d8351b; }
 .sym-vehicle.band-CRITICAL { color: #d8351b; }
 .sym-vehicle .sym-ring { position: absolute; inset: -6px; border-radius: 50%; border: 2px solid currentColor; opacity: 0; }
-.sym-vehicle.band-CRITICAL .sym-ring { animation: ripple 2.4s var(--ease-out) infinite; }
+.sym-vehicle.band-HIGH .sym-ring, .sym-vehicle.band-CRITICAL .sym-ring { animation: ripple 2.4s var(--ease-out) infinite; }
 .sym-vehicle.is-stale .sym-arrow path { fill: var(--paper); stroke-dasharray: 2 2; }
 .sym-vehicle.is-selected .sym-label { background: var(--ink); color: var(--paper); text-shadow: none; padding: 1px 5px; }
 .sym-vehicle.is-dim { opacity: .28; }
@@ -89,5 +89,6 @@
 .sym-stop.is-transfer span { border-radius: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
+  .sym-vehicle.band-HIGH .sym-ring,
   .sym-vehicle.band-CRITICAL .sym-ring { animation: none; opacity: .6; }
 }

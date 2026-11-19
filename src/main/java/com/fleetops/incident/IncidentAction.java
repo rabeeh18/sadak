@@ -18,8 +18,9 @@ public class IncidentAction {
 
     /** Things a dispatcher (or the system) can record against an incident. */
     public enum Kind {
-        ACKNOWLEDGED("Acknowledged"),
+        ACKNOWLEDGED("Picked up"),
         CONTACTED_DRIVER("Contacted driver"),
+        NEW_TIME("Gave customers a new time"),
         ADJUSTED_ETA("Adjusted ETA"),
         RECALCULATED_ROUTE("Recalculated route"),
         REASSIGNED("Reassigned vehicle/driver"),

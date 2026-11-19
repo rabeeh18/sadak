@@ -48,6 +48,11 @@ public class LocationWriter {
         queue.add(location);
     }
 
+    /** Demo reset: drop positions not yet written; their vehicles are about to be deleted. */
+    public void forgetAll() {
+        queue.clear();
+    }
+
     @Scheduled(fixedDelay = 5000, initialDelay = 5000)
     @Transactional
     public void flush() {

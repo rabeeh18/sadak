@@ -34,6 +34,21 @@ public final class RouteLine {
         return points;
     }
 
+    /** The stretch of road between two distances along the route, as points (at least two). */
+    public List<GeoPoint> between(double from, double to) {
+        double a = Math.max(0, Math.min(length(), Math.min(from, to)));
+        double b = Math.max(0, Math.min(length(), Math.max(from, to)));
+        java.util.ArrayList<GeoPoint> out = new java.util.ArrayList<>();
+        out.add(pointAt(a));
+        for (int i = 0; i < points.size(); i++) {
+            if (cumulative[i] > a && cumulative[i] < b) {
+                out.add(points.get(i));
+            }
+        }
+        out.add(pointAt(b));
+        return out;
+    }
+
     public GeoPoint pointAt(double distance) {
         return locate(distance).point();
     }

@@ -52,9 +52,7 @@ class EtaAndRiskTest {
             "BREAKDOWN", new RuleSnapshot("BREAKDOWN", "Vehicle breakdown", 60, null, null, true));
         when(settings.rule(anyString())).thenAnswer(inv -> rules.get(inv.getArgument(0, String.class)));
         when(settings.getInt("sla.at-risk-min")).thenReturn(15);
-        when(settings.getInt("risk.band.medium")).thenReturn(25);
-        when(settings.getInt("risk.band.high")).thenReturn(50);
-        when(settings.getInt("risk.band.critical")).thenReturn(75);
+        when(settings.getInt("risk.late-action-min")).thenReturn(5);
         engine = new RiskEngine(settings);
     }
 
@@ -102,14 +100,14 @@ class EtaAndRiskTest {
     }
 
     @Test
-    void breakdownMakesEtaUnknownAndScoresCritical() {
+    void breakdownMakesEtaUnknownAndNeedsAction() {
         LiveTrip lt = trip();
         lt.setBrokenDown(true);
         EtaCalculator.TripEta result = eta.compute(lt, 0, T0);
         assertThat(result.unknown()).isTrue();
         RiskAssessment a = engine.assess(lt, result, List.of(), T0);
         assertThat(a.has("BREAKDOWN")).isTrue();
-        assertThat(a.band()).isEqualTo(RiskBand.HIGH); // 60 points alone is high; another condition makes it critical
+        assertThat(a.band()).isEqualTo(RiskBand.HIGH); // Needs action, whatever the points
     }
 
     @Test
@@ -120,8 +118,8 @@ class EtaAndRiskTest {
         RiskAssessment a = engine.assess(lt, result, List.of(late), T0);
         assertThat(a.worstLateMinutes()).isEqualTo(20);
         assertThat(a.get("PROJECTED_LATE").points()).isEqualTo(30); // 1.5 points per minute
-        assertThat(a.explanation()).contains("projected 20 min late");
-        assertThat(a.band()).isEqualTo(RiskBand.MEDIUM);
+        assertThat(a.explanation()).contains("20 min after its promised time");
+        assertThat(a.band()).isEqualTo(RiskBand.HIGH); // late is a problem that needs action, even at 30 points
     }
 
     @Test
@@ -145,6 +143,18 @@ class EtaAndRiskTest {
         lt.applyFix(lt.position(), 0, 0, 0, 0, justAfter);
         RiskAssessment a = engine.assess(lt, eta.compute(lt, 0, justAfter), List.of(), justAfter);
         assertThat(a.has("UNEXPECTED_STOP")).isFalse();
+    }
+
+    @Test
+    void aFewMinutesLateOrCloseIsOnlyAHeadsUp() throws Exception {
+        LiveTrip lt = trip();
+        EtaCalculator.TripEta result = eta.compute(lt, 0, T0);
+        Shipment slightly = shipmentAtStop(2, result.byStop().get(2L).minusSeconds(3 * 60)); // 3 min late: under the 5 min line
+        RiskAssessment a = engine.assess(lt, result, List.of(slightly), T0);
+        assertThat(a.has("PROJECTED_LATE")).isFalse();
+        assertThat(a.has("DEADLINE_PRESSURE")).isTrue();
+        assertThat(a.band()).isEqualTo(RiskBand.MEDIUM);
+        assertThat(engine.assess(lt, result, List.of(), T0).band()).isEqualTo(RiskBand.LOW);
     }
 
     private static Shipment shipmentAtStop(long stopId, Instant deadline) throws Exception {

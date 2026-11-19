@@ -40,7 +40,9 @@
   const fmtDelta = m => m === null || m === undefined ? '—' : (m === 0 ? 'on plan' : (m > 0 ? '+' : '−') + Math.abs(m) + ' min');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const icon = (name, cls) => `<svg class="icon ${cls || ''}" aria-hidden="true"><use href="/img/icons.svg#i-${name}"></use></svg>`;
-  const spot = (score, band) => `<span class="spot band-${band}" title="Risk ${score} (${band.toLowerCase()})"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .8 9.4 9.2H.6z" fill="currentColor"/></svg>${score}</span>`;
+  /** A trip's light: On track, Watch or Needs action; the risk points are in the tooltip. */
+  const LIGHT = { LOW: 'On track', MEDIUM: 'Watch', HIGH: 'Needs action', CRITICAL: 'Needs action' };
+  const spot = (score, band) => `<span class="light band-${band}" title="Risk points ${score}">${LIGHT[band] || 'On track'}</span>`;
 
   // ------------------------------------------------------------------ simulation clock
 
@@ -60,9 +62,11 @@
     const sel = clockEl.querySelector('[data-clock-speed]');
     if (sel && document.activeElement !== sel) sel.value = String(Math.round(clock.speed));
     clockEl.toggleAttribute('data-paused', clock.paused);
+    const toggle = clockEl.querySelector('[data-clock-toggle]');
+    if (!toggle) return; // production: real time, no controls
     clockEl.querySelector('[data-icon-pause]').hidden = clock.paused;
     clockEl.querySelector('[data-icon-play]').hidden = !clock.paused;
-    clockEl.querySelector('[data-clock-toggle]').setAttribute('aria-label', clock.paused ? 'Resume simulation' : 'Pause simulation');
+    toggle.setAttribute('aria-label', clock.paused ? 'Resume simulation' : 'Pause simulation');
   }
   if (clockEl) {
     clock.sync(Number(clockEl.dataset.now), Number(clockEl.dataset.speed), clockEl.hasAttribute('data-paused'));
@@ -75,11 +79,11 @@
     };
     tick();
     setInterval(tick, 500);
-    clockEl.querySelector('[data-clock-speed]').addEventListener('change', async e => {
+    clockEl.querySelector('[data-clock-speed]')?.addEventListener('change', async e => {
       const r = await api('POST', '/api/sim/speed', { speed: Number(e.target.value) });
       clock.sync(r.now, r.speed, r.paused);
     });
-    clockEl.querySelector('[data-clock-toggle]').addEventListener('click', async () => {
+    clockEl.querySelector('[data-clock-toggle]')?.addEventListener('click', async () => {
       const r = await api('POST', clock.paused ? '/api/sim/resume' : '/api/sim/pause');
       clock.sync(r.now, r.speed, r.paused);
     });

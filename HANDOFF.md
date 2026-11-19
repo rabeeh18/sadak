@@ -1,6 +1,6 @@
 # Sadak: project handoff
 
-Read this first when picking the project up on a fresh machine. `README.md` covers how the app works, `DESIGN.md` the visual system, and `final_plan.md` the original scope.
+Read this first when picking the project up on a fresh machine. `README.md` covers how the app works, `DESIGN.md` the visual system, and `DEPLOY.md` how to put it on a server.
 
 ## Where things stand
 
@@ -24,15 +24,20 @@ Read this first when picking the project up on a fresh machine. `README.md` cove
 | Visual style | Toposheet, a Survey of India map sheet (see `DESIGN.md`). A minimal redesign was mocked up and declined for now; the user will raise it if that changes |
 | Stack | Java 21, Spring Boot 4.1, Thymeleaf, custom CSS, Leaflet, STOMP, PostgreSQL 17 |
 | Region | Punjab, India |
-| Customers | Public tracking page only, no accounts |
-| Project type | Portfolio project, no deadline |
+| Customers | Public tracking page only, no accounts. The sign-in card has two tabs, Track a parcel (default) and Staff sign in; the demo role picker is its own page, `/demo`. The tracking page has no staff sign-in link |
+| Customer help | On the tracking page: a note for the driver (shown at the stop), the parcel's warehouse desk phone and hours, and Report a problem. Complaints go to that warehouse's desk first and notify dispatchers; the desk's reply shows on the tracking page. No chatbot |
+| Roles | Admin, Dispatcher (whole fleet, control room), Warehouse (one warehouse: its desk page, shipments, booking, complaints), Driver |
+| Problems and incidents | Each trip has a light: On track, Watch (heads-up), Needs action. Every Needs-action problem is an incident: Will be late, Off route, GPS lost, Truck stuck, Breakdown. Incidents go Open → Being handled → Closed (or "Fixed itself"); each has one main fix. Points remain only as the explanation. Failed deliveries are not incidents (the warehouse desk rebooks them) |
+| Staff accounts | Sign in by email. Invite-only: admin invites with a role, the person sets their own password from a one-time link. Sadak sends no email: admins pass invite and reset links on themselves; there is no self-service password reset. First admin from `FLEET_ADMIN_*` |
+| Modes | Demo stays (needed for showing the project) and is the default; production mode (`-Production` / `prod` profile) is for deployment |
+| Project type | College project (Java subject) and portfolio; meant to be deployed |
 
 ## Open items
 
-1. **Visual views: not built.** The user finds Trips, Shipments and other tabs too list-like. The design is in `docs/mockups/views/boards.html`: trips timetable, shipments horizon, incidents board, fleet yard, each with a List toggle. Awaiting a decision on which to build; Trips was recommended first.
-2. **Background colour: undecided.** Someone suggested trying other page backgrounds. Options shown: olive (current), paper white, survey blue, sand, forest tint, stone grey, contour clay, dark ink.
-3. **Bug: on screens narrower than about 1000 px, the control tower map collapses to a thin strip.** Not fixed.
-4. **The driver app header** shows the name "Sadak" but not the ਸੜਕ logo.
+1. **Bug: on screens narrower than about 1000 px, the control tower map collapses to a thin strip.** Not fixed.
+2. **The driver app header** shows the name "Sadak" but not the ਸੜਕ logo.
+3. **Travelled path cuts corners.** The black line joins positions saved once per simulated minute (`tracking.persist-every-s`) with straight lines, so it chords across curves and stops short of the truck. Proposed: save a point when the heading turns, not only on a timer, and end the line at the live position. Awaiting a go-ahead.
+4. **Deployment: scripts ready, not yet done.** The plan is one EC2 instance (Ubuntu 24.04) in demo mode, so the professor can see it. `deploy/setup-ec2.sh` installs Java, PostgreSQL and Caddy (automatic HTTPS, free `<ip>.sslip.io` name if there is no domain) and runs Sadak as a service; `deploy/update.sh` and `deploy/reset-demo.sh` for later. Steps in `DEPLOY.md`. No public-demo lock (clock or admin): only the professor will visit.
 
 ## Setup on a fresh machine
 

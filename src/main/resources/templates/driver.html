@@ -34,6 +34,7 @@
       </div>
       <p class="drv-meta" th:text="${trip.warehouse.name} + ' · ' + ${trip.completedStopCount()} + ' of ' + ${trip.stops.size()} + ' stops done'">meta</p>
       <div class="progress" style="height:6px"><i th:style="'width:' + ${trip.progressPercent()} + '%'"></i></div>
+      <p class="drv-meta drv-notes-count" th:if="${noteCount != null and noteCount > 0}" th:text="${noteCount} + ' note' + (${noteCount == 1} ? '' : 's') + ' from customers on this trip'">notes</p>
     </section>
 
     <section class="drv-card" th:if="${trip.status.name() == 'PLANNED'}">
@@ -56,7 +57,8 @@
       </div>
       <ul class="drv-parcels" th:if="${list != null}">
         <li th:each="s : ${list}"><strong th:text="${s.trackingNo}">FL</strong> <span th:text="${s.recipientName} + ' · ' + ${s.weightKg} + ' kg'">r</span>
-          <a th:if="${s.recipientPhone != null}" th:href="'tel:' + ${s.recipientPhone}" class="drv-link">Call</a></li>
+          <a th:if="${s.recipientPhone != null}" th:href="'tel:' + ${s.recipientPhone}" class="drv-link">Call</a>
+          <div class="drv-cnote" th:if="${s.customerNote != null}"><b>Note from customer</b><span th:text="${s.customerNote}">note</span></div></li>
       </ul>
       <p th:if="${next.kind.name() == 'TRANSFER'}" class="drv-note">Collect the cargo from the broken-down vehicle here, then continue.</p>
 
@@ -71,7 +73,7 @@
           <label for="recipient">Received by</label>
           <input id="recipient" name="recipient" required autocomplete="off" placeholder="Name of the person who signed">
           <label for="note">Note (optional)</label>
-          <input id="note" name="note" placeholder="Left with shop owner">
+          <input id="note" name="note" type="text" placeholder="Left with shop owner">
         </th:block>
         <input th:if="${next.kind.name() == 'TRANSFER'}" type="hidden" name="recipient" value="Cargo transfer">
         <button class="drv-btn drv-primary" type="submit" th:text="${next.kind.name() == 'TRANSFER'} ? 'Cargo collected' : 'Delivered'">Delivered</button>
@@ -94,7 +96,7 @@
         <li th:each="s : ${trip.stops}" th:attr="data-state=${s.status.name()}" th:attrappend="data-next=${next != null and s.id == next.id ? '' : null}">
           <span class="node"></span>
           <div class="t-head"><span th:text="${s.seq} + '. ' + ${s.name}">stop</span><span class="small muted num" th:text="${s.actualArrival != null ? @fmt.time(s.actualArrival) : @fmt.time(s.eta)}">t</span></div>
-          <div class="t-meta" th:text="${s.status.label()}">st</div>
+          <div class="t-meta"><span th:text="${s.status.label()}">st</span><th:block th:with="list=${byStop[s.id]}"><span class="drv-has-note" th:if="${list != null and !s.status.isDone() and list.?[customerNote != null].size() > 0}"> · ✉ customer note</span></th:block></div>
         </li>
       </ol>
     </section>
@@ -103,7 +105,7 @@
       <h2>Problem with the vehicle?</h2>
       <form method="post" th:action="@{/driver/trips/{id}/breakdown(id=${trip.id})}" data-confirm="Report a breakdown? Dispatch will arrange a replacement.">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <input name="note" placeholder="What's wrong (optional)">
+        <input name="note" type="text" placeholder="What's wrong (optional)">
         <button class="drv-btn drv-danger" type="submit">Report breakdown</button>
       </form>
       <label class="check drv-share" th:unless="${trip.vehicle.simulated}"><input type="checkbox" data-share-location> Share my phone's location</label>

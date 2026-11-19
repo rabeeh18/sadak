@@ -65,6 +65,11 @@ public class SimulationEngine {
     private final OperationalClock clock;
     private final StartupGate gate;
     private final Map<Long, SimState> states = new ConcurrentHashMap<>();
+
+    /** Demo reset: forget every simulated problem (slow down, detour...). */
+    public void forgetAll() {
+        states.clear();
+    }
     private Instant lastTick;
     private int tickCount;
 

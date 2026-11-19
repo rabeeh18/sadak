@@ -2,20 +2,16 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<span th:fragment="spot(score, band)" class="spot" th:classappend="'band-' + ${band}" th:title="'Risk ' + ${score}">
-  <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .8 9.4 9.2H.6z" fill="currentColor"/></svg><th:block th:text="${score}">0</th:block>
-</span>
+<!-- A trip's light: On track, Watch or Needs action. The risk points are in the tooltip. -->
+<span th:fragment="spot(score, band)" class="light" th:classappend="'band-' + ${band}" th:title="'Risk points ' + ${score}"
+      th:text="${band == 'HIGH' or band == 'CRITICAL'} ? 'Needs action' : (${band == 'MEDIUM'} ? 'Watch' : 'On track')">On track</span>
 
 <span th:fragment="tripStatus(status)" class="tag"
       th:classappend="${status.name() == 'IN_PROGRESS'} ? 'tag-blue' : (${status.name() == 'COMPLETED'} ? 'tag-green' : (${status.name() == 'CANCELLED'} ? 'tag-ink' : 'tag-ochre'))"
       th:text="${status.label()}">Status</span>
 
-<span th:fragment="severity(sev)" class="tag"
-      th:classappend="${sev.name() == 'CRITICAL'} ? 'tag-solid-red' : (${sev.name() == 'HIGH'} ? 'tag-orange' : (${sev.name() == 'MEDIUM'} ? 'tag-ochre' : 'tag-ink'))"
-      th:text="${sev.label()}">Severity</span>
-
 <span th:fragment="incidentStatus(st)" class="tag"
-      th:classappend="${st.name() == 'RESOLVED'} ? 'tag-green' : (${st.name() == 'DETECTED'} ? 'tag-red' : 'tag-blue')"
+      th:classappend="${st.name() == 'RESOLVED'} ? 'tag-green' : (${st.name() == 'DETECTED'} ? 'tag-red' : 'tag-ochre')"
       th:text="${st.label()}">Status</span>
 
 <span th:fragment="shipmentStatus(st)" class="tag"
@@ -26,6 +22,29 @@
       th:classappend="${st.name() == 'AVAILABLE'} ? 'tag-green' : (${st.name() == 'ON_TRIP'} ? 'tag-blue' : (${st.name() == 'BROKEN_DOWN'} ? 'tag-red' : 'tag-ochre'))"
       th:text="${st.label()}">Status</span>
 
+  <!-- One card: what's wrong in a sentence, and the button that fixes it. -->
+  <article th:fragment="incidentCard(i, done)" class="icard" th:classappend="${done} ? 'is-closed' : (${i.status.name() == 'IN_PROGRESS'} ? 'is-taken' : '')">
+    <a class="icard-head" th:href="@{/incidents/{id}(id=${i.id})}">
+      <b th:text="${i.type.label()} + (${i.trip != null} ? ' · ' + ${i.trip.code} : '')">Will be late · TR</b>
+      <span class="small muted" th:text="${done} ? ${@fmt.time(i.resolvedAt)} : ${@fmt.ago(i.detectedAt)}">t</span>
+    </a>
+    <p th:text="${done} ? ${i.resolution} : ${i.title}">title</p>
+    <p class="small muted" th:if="${!done and i.ownerUsername != null}" th:text="${i.ownerUsername} + ' is on it'">owner</p>
+    <div class="btn-row" th:if="${!done}">
+      <form th:if="${i.type.name() == 'SLA_RISK'}" method="post" th:action="@{/incidents/{id}/new-time(id=${i.id})}">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="back" value="/incidents">
+        <button class="btn btn-sm btn-fix" type="submit" th:text="${i.type.fix()}">fix</button></form>
+      <form th:if="${i.type.name() == 'BREAKDOWN'}" method="post" th:action="@{/incidents/{id}/send-replacement(id=${i.id})}"
+            data-confirm="Send the recommended replacement truck?">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="back" value="/incidents">
+        <button class="btn btn-sm btn-fix" type="submit" th:text="${i.type.fix()}">fix</button></form>
+      <a th:if="${i.type.callsDriver()}" class="btn btn-sm btn-fix" th:href="@{/incidents/{id}(id=${i.id})}" th:text="${i.type.fix()}">fix</a>
+      <form th:if="${i.status.name() == 'DETECTED'}" method="post" th:action="@{/incidents/{id}/acknowledge(id=${i.id})}">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="back" value="/incidents">
+        <button class="btn btn-sm btn-quiet" type="submit">I'm on it</button></form>
+    </div>
+  </article>
+
 <nav th:fragment="fleetTabs(tab)" class="tabs" style="margin-bottom:16px" aria-label="Fleet sections">
   <a href="/fleet/vehicles" th:attr="aria-current=${tab == 'vehicles'} ? 'page' : null">Vehicles</a>
   <a href="/fleet/drivers" th:attr="aria-current=${tab == 'drivers'} ? 'page' : null">Drivers</a>
@@ -34,7 +53,7 @@
 </nav>
 
 <nav th:fragment="adminTabs(tab)" class="tabs" style="margin-bottom:16px" aria-label="Admin sections">
-  <a href="/admin/settings" th:attr="aria-current=${tab == 'settings'} ? 'page' : null">Risk rules &amp; settings</a>
+  <a href="/admin/settings" th:attr="aria-current=${tab == 'settings'} ? 'page' : null">Problems &amp; settings</a>
   <a href="/admin/users" th:attr="aria-current=${tab == 'users'} ? 'page' : null">Users</a>
   <a href="/admin/audit" th:attr="aria-current=${tab == 'audit'} ? 'page' : null">Audit log</a>
 </nav>
