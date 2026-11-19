@@ -9,7 +9,8 @@ public enum IncidentType {
     BREAKDOWN("Breakdown", "Send replacement truck", false),
     LONG_STOP("Truck stuck", "Call the driver", true),
     ROUTE_DEVIATION("Off route", "Call the driver", true),
-    LOCATION_STALE("GPS lost", "Call the driver", true);
+    LOCATION_STALE("GPS lost", "Call the driver", true),
+    NOT_DEPARTED("Hasn't left yet", "Call the driver", true);
 
     private final String label;
     private final String fix;

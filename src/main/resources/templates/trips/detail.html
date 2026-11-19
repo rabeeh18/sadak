@@ -13,7 +13,7 @@
       <h1><th:block th:text="${trip.code}">TR</th:block>
         <span th:replace="~{parts :: tripStatus(${trip.status})}"></span>
         <th:block th:if="${live != null}"><span th:replace="~{parts :: spot(${live.riskScore}, ${live.riskBand})}"></span></th:block>
-        <th:block th:if="${live == null and trip.riskScore > 0}"><span th:replace="~{parts :: spot(${trip.riskScore}, ${trip.riskBand.name()})}"></span></th:block>
+        <th:block th:if="${live == null and trip.riskScore > 0 and trip.status.name() != 'CANCELLED'}"><span th:replace="~{parts :: spot(${trip.riskScore}, ${trip.riskBand.name()})}"></span></th:block>
       </h1>
       <p class="sub">
         <th:block th:text="${trip.warehouse.name}">WH</th:block> ·

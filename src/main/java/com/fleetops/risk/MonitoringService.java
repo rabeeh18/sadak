@@ -69,6 +69,7 @@ public class MonitoringService {
         latest.clear();
         activeConditions.clear();
         conditionSeverity.clear();
+        notDeparted.clear();
     }
 
     public MonitoringService(LiveFleet live, TripRepository trips, ShipmentRepository shipments,
@@ -114,10 +115,63 @@ public class MonitoringService {
                 log.warn("Monitoring failed for {}: {}", lt.tripCode, e.toString());
             }
         }
+        try {
+            checkDepartures(now);
+        } catch (RuntimeException e) {
+            log.warn("Departure check failed: {}", e.toString());
+        }
         latest.keySet().removeIf(id -> !seen.contains(id));
         activeConditions.keySet().removeIf(k -> !seen.contains(Long.valueOf(k.substring(0, k.indexOf(':')))));
         conditionSeverity.keySet().removeIf(k -> !seen.contains(Long.valueOf(k.substring(0, k.indexOf(':')))));
         broadcaster.publishTrips(Map.of("t", now.toEpochMilli(), "trips", summaries()));
+    }
+
+    // ------------------------------------------------------------------ trips that haven't left
+
+    /** Planned trips with a "Hasn't left yet" incident open, and when it was last refreshed. */
+    private final Map<Long, Instant> notDeparted = new ConcurrentHashMap<>();
+
+    /**
+     * A planned trip past its departure time whose driver hasn't pressed Start trip: Watch from the
+     * rule's threshold, Needs action (and an incident) from the setting. Starting or cancelling the
+     * trip clears it.
+     */
+    private void checkDepartures(Instant now) {
+        SettingsService.RuleSnapshot rule = settings.rule("NOT_DEPARTED");
+        int actionFrom = settings.getInt("risk.not-departed-action-min");
+        java.util.Set<Long> needsAction = new java.util.HashSet<>();
+        if (rule != null && rule.enabled()) {
+            for (Trip t : trips.findByStatusInOrderByPlannedStartAsc(List.of(TripStatus.PLANNED))) {
+                long waiting = Duration.between(t.getPlannedStart(), now).toMinutes();
+                if (waiting < rule.threshold()) {
+                    continue;
+                }
+                boolean action = waiting >= actionFrom;
+                RiskBand light = action ? RiskBand.HIGH : RiskBand.MEDIUM;
+                String detail = t.getVehicle().getRegistration() + " was due to leave " + t.getWarehouse().getName() + " "
+                    + waiting + " min ago; " + t.getDriver().getFullName() + " hasn't pressed Start trip";
+                if (t.getRiskBand() != light || t.getRiskScore() != rule.points()) {
+                    tx.executeWithoutResult(s -> trips.findById(t.getId()).ifPresent(x ->
+                        x.applyRisk(rule.points(), light, "+" + rule.points() + " " + rule.label() + " — " + detail, now)));
+                }
+                if (action) {
+                    needsAction.add(t.getId());
+                    Instant last = notDeparted.get(t.getId());
+                    if (last == null || Duration.between(last, now).compareTo(REDETECT_EVERY.multipliedBy((long) Math.max(1, clock.speed()))) > 0) {
+                        incidents.detect(new IncidentService.Detection(t.getId(), IncidentType.NOT_DEPARTED, RiskBand.HIGH,
+                            t.getCode() + " hasn't left " + t.getWarehouse().getName() + " (" + waiting + " min after its departure time)",
+                            detail, null, t.getVehicle()));
+                        notDeparted.put(t.getId(), now);
+                    }
+                }
+            }
+        }
+        for (Long id : List.copyOf(notDeparted.keySet())) {
+            if (!needsAction.contains(id)) {
+                notDeparted.remove(id);
+                incidents.conditionCleared(id, IncidentType.NOT_DEPARTED);
+            }
+        }
     }
 
     private Outcome evaluate(LiveTrip lt, Instant now) {

@@ -68,7 +68,7 @@ Memory while running: about 320 MB for the app and 85 MB for PostgreSQL.
 1. **Control tower.** Open **Try the demo** on the sign-in page and pick Dispatcher. Vehicles move along real roads (routes from OSRM, fetched once per plan and stored). The clock in the header is simulated; use its menu to change speed (1×–120×) or pause.
 2. **Pick a trip** in the right-hand index. The map dims everything else and draws the planned route (blue dashed) against the travelled path (black). The panel shows ETAs per stop and **what's wrong**, in plain sentences, each with the points it adds.
 3. **Simulate a problem** from the same panel: *Slow down*, *Stuck 20 min*, *Detour*, *GPS lost* or *Breakdown*. Within seconds the trip turns red, "What's wrong" explains why, and an incident opens with a notification.
-4. **Fix it**, right in the panel or on the Incidents board. Each incident has one main button: *Give customer a new time* (Will be late), *Call the driver* (Off route, GPS lost, Truck stuck) or *Send replacement truck* (Breakdown, using the recommended vehicle). "I'm on it" marks it as being handled; other actions are under "More". The new route first goes to the breakdown site to collect the cargo, then continues. Completed stops are untouched.
+4. **Fix it**, right in the panel or on the Incidents board. Each incident has one main button: *Give customer a new time* (Will be late), *Call the driver* (Off route, GPS lost, Truck stuck, Hasn't left yet) or *Send replacement truck* (Breakdown, using the recommended vehicle). "I'm on it" marks it as being handled; other actions are under "More". The new route first goes to the breakdown site to collect the cargo, then continues. Completed stops are untouched.
 5. **Driver view.** Pick Driver on the demo page (or open it on a phone). Gurpreet Singh has a planned trip: start it, confirm arrivals, record deliveries with the recipient's name, or report a failed delivery.
 6. **Public tracking.** `/track`: tracking number + delivery PIN code shows status against the promised time, progress, and a map of the road still to go (with a gap around the truck, whose position is only approximate). The customer can leave the driver a note, call the warehouse desk, or report a problem and follow its progress.
 7. **Warehouse desk.** Pick Warehouse on the demo page: the Patiala desk sees only Patiala: today's departures, parcels waiting and coming back, customer notes, and complaints to call back, answer and resolve (the reply shows on the customer's tracking page). Demo customers write in now and then.
@@ -126,6 +126,7 @@ Pace is the ratio of actual to planned driving time over the last stretch, clamp
 | Off route | Needs action | Off route | 20 | > 500 m from the planned road |
 | Late before | Watch | | 10 | a parcel on board was late or re-attempted once |
 | Breakdown | Needs action | Breakdown | 60 | the driver reported it |
+| Hasn't left yet | Watch, then Needs action | Hasn't left yet | 20 | a planned trip 10+ min past its departure time without Start trip; needs action from 30 min |
 
 An incident goes **Open → Being handled → Closed**. The detected problems (all but Breakdown) close themselves, as "Fixed itself", if they go away before anyone picks them up. A failed delivery is not an incident: the parcel's warehouse desk rebooks it.
 

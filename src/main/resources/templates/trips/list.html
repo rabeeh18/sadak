@@ -46,7 +46,7 @@
             <td>
               <th:block th:with="s=${live[t.id]}">
                 <th:block th:if="${s != null}"><span th:replace="~{parts :: spot(${s.riskScore}, ${s.riskBand})}"></span></th:block>
-                <th:block th:if="${s == null}"><span th:replace="~{parts :: spot(${t.riskScore}, ${t.riskBand.name()})}"></span></th:block>
+                <th:block th:if="${s == null and t.status.name() != 'CANCELLED'}"><span th:replace="~{parts :: spot(${t.riskScore}, ${t.riskBand.name()})}"></span></th:block>
               </th:block>
             </td>
             <td><span class="plate" th:text="${t.vehicle.registration}">PB</span></td>
