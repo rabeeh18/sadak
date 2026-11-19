@@ -42,7 +42,6 @@
       <li><a href="/shipments" th:attr="aria-current=${active == 'shipments'} ? 'page' : null"><svg class="icon"><use href="/img/icons.svg#i-package"></use></svg>Shipments</a></li>
       <li><a href="/fleet/vehicles" th:attr="aria-current=${active == 'fleet'} ? 'page' : null"><svg class="icon"><use href="/img/icons.svg#i-truck"></use></svg>Fleet</a></li>
       <li><a href="/analytics" th:attr="aria-current=${active == 'analytics'} ? 'page' : null"><svg class="icon"><use href="/img/icons.svg#i-chart-column"></use></svg>Analytics</a></li>
-      <li th:if="${me.admin}"><a href="/admin/settings" th:attr="aria-current=${active == 'admin'} ? 'page' : null"><svg class="icon"><use href="/img/icons.svg#i-settings"></use></svg>Admin</a></li>
     </ul>
   </nav>
   <div class="topbar-right">

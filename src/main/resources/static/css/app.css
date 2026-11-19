@@ -650,3 +650,29 @@ details.panel > summary.panel-head { cursor: pointer; }
 .login-pane .demo-roles { border-top: 0; padding-top: 0; gap: var(--space-2); }
 .login-pane .demo-role { padding: 10px 14px; }
 .demo-reset { border-color: var(--road); }
+
+/* ------------------------------------------------------------------ demo picker: forms, driver list, reset */
+.demo-roles form { margin: 0; }
+.demo-roles form > .demo-role { width: 100%; }
+details.demo-pick { display: block; padding: 0; cursor: default; }
+details.demo-pick > summary { list-style: none; display: grid; grid-template-columns: 28px 1fr auto; column-gap: var(--space-3); row-gap: 2px;
+  align-items: center; padding: 10px 14px; cursor: pointer; }
+details.demo-pick > summary::-webkit-details-marker { display: none; }
+details.demo-pick > summary .demo-pick-chevron { grid-column: 3; grid-row: 1 / span 2; width: 18px; height: 18px; color: var(--ink-3); transition: transform .2s; }
+details.demo-pick[open] { border-color: var(--ink); background: var(--paper); }
+details.demo-pick[open] .demo-pick-chevron { transform: rotate(180deg); }
+.demo-drivers { border-top: 1px solid var(--rule-soft); padding: 6px 8px 10px; display: grid; gap: 2px; max-height: 300px; overflow-y: auto; }
+.demo-driver { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; text-align: left;
+  padding: 8px; background: transparent; border: 1px solid transparent; font: inherit; color: var(--ink); cursor: pointer; }
+.demo-driver:hover, .demo-driver:focus-visible { background: #fff; border-color: var(--rule-soft); }
+.demo-driver strong { font-size: 14px; }
+.demo-driver-who { display: grid; min-width: 0; }
+.demo-driver-who .small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.demo-driver-trip { display: flex; align-items: center; gap: 6px; flex: none; }
+.demo-driver-trip .plate { font-size: 10px; }
+.demo-pick-note { margin: 6px 8px 0; }
+.demo-reset-link { margin: var(--space-3) 0 0; text-align: right; }
+.linklike { display: inline-flex; align-items: center; gap: 4px; padding: 0; background: none; border: 0; font: inherit;
+  color: var(--ink-3); text-decoration: underline; cursor: pointer; }
+.linklike:hover { color: var(--road); }
+@media (max-width: 520px) { .demo-driver-trip .plate { display: none; } }

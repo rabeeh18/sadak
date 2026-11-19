@@ -51,7 +51,7 @@ public abstract class IntegrationTestSupport {
         jdbc.execute("""
             truncate table complaints, incident_actions, incidents, notifications, audit_log, status_history, risk_evaluations,
                 sla_breach_events, vehicle_locations, delivery_proofs, shipments, trip_assignments, route_versions,
-                trip_stops, trips, maintenance_records, drivers, vehicles, warehouses, user_tokens, user_roles, users restart identity cascade""");
+                trip_stops, trips, maintenance_records, drivers, vehicles, warehouses, user_roles, users restart identity cascade""");
         settings.reload();
         clock.restore(Instant.now(), 1, true);
     }

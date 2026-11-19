@@ -125,6 +125,8 @@ public class DemoOperations {
         Map<Long, Long> liveByWarehouse = new HashMap<>();
         live.forEach(t -> liveByWarehouse.merge(t.getWarehouse().getId(), 1L, Long::sum));
         LocalDate today = local.toLocalDate();
+        // Every driver except the hand-driven demo driver gets trips (visitors may have signed in as others).
+        Long manualId = drivers.findByUserUsername(DemoSeeder.DEMO_DRIVER_USERNAME).map(Driver::getId).orElse(null);
         Instant now = clock.now();
 
         List<Warehouse> all = new ArrayList<>(warehouses.findByActiveTrueOrderByNameAsc());
@@ -141,7 +143,7 @@ public class DemoOperations {
             Optional<Vehicle> vehicle = vehicles.findByStatusOrderByRegistrationAsc(VehicleStatus.AVAILABLE).stream()
                 .filter(v -> v.getHomeWarehouse().getId().equals(w.getId()) && v.isSimulated()).findFirst();
             Optional<Driver> driver = drivers.findByStatusOrderByFullNameAsc(DriverStatus.AVAILABLE).stream()
-                .filter(d -> d.getHomeWarehouse().getId().equals(w.getId()) && d.licenseValidOn(today) && d.getUser() == null)
+                .filter(d -> d.getHomeWarehouse().getId().equals(w.getId()) && d.licenseValidOn(today) && !d.getId().equals(manualId))
                 .findFirst();
             if (vehicle.isEmpty() || driver.isEmpty()) {
                 continue;

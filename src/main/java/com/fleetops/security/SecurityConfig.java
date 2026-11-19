@@ -20,22 +20,18 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/demo", "/demo-login", "/track", "/track/**", "/error",
-                        "/account/set-password",
+                .requestMatchers("/login", "/demo-login", "/demo-reset", "/track", "/track/**", "/error",
                         "/css/**", "/js/**", "/img/**", "/fonts/**", "/favicon.svg", "/actuator/health").permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/driver/**", "/api/driver/**").hasRole("DRIVER")
                 .requestMatchers("/desk", "/desk/**").hasRole("WAREHOUSE")
-                .requestMatchers("/complaints", "/complaints/**").hasAnyRole("ADMIN", "DISPATCHER", "WAREHOUSE")
-                .requestMatchers("/api/telemetry/**").hasAnyRole("DRIVER", "ADMIN")
-                .requestMatchers("/ws/**").hasAnyRole("ADMIN", "DISPATCHER")
+                .requestMatchers("/complaints", "/complaints/**").hasAnyRole("DISPATCHER", "WAREHOUSE")
+                .requestMatchers("/api/telemetry/**").hasRole("DRIVER")
+                .requestMatchers("/ws/**").hasRole("DISPATCHER")
                 .requestMatchers("/").authenticated()
-                .anyRequest().hasAnyRole("ADMIN", "DISPATCHER"))
-            .formLogin(form -> form
-                .loginPage("/login")
-                .usernameParameter("email")
-                .defaultSuccessUrl("/", true)
-                .permitAll())
+                .anyRequest().hasRole("DISPATCHER"))
+            // Sign-in is the demo role picker on /login; anyone not signed in is sent there.
+            .exceptionHandling(e -> e.authenticationEntryPoint(
+                new org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint("/login")))
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?signedOut"))
@@ -56,7 +52,7 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    /** People sign in with their email; the session then carries their internal username, used by audit. */
+    /** Looks accounts up by email. Sign-in itself is the demo picker; this also stops Spring creating a default user. */
     @Bean
     UserDetailsService userDetailsService(UserAccountRepository users) {
         return email -> users.findByEmail(UserAccount.normaliseEmail(email))
@@ -64,11 +60,11 @@ public class SecurityConfig {
             .orElseThrow(() -> new UsernameNotFoundException(email));
     }
 
-    /** Invited accounts stay disabled until the person has chosen a password. */
+    /** The signed-in principal: the internal username (used by audit) and the account's roles. */
     public static UserDetails toUserDetails(UserAccount u) {
         return User.withUsername(u.getUsername())
             .password(u.getPasswordHash())
-            .disabled(!u.isEnabled() || u.isInvitePending())
+            .disabled(!u.isEnabled())
             .authorities(u.getRoles().stream().map(Role::authority).toArray(String[]::new))
             .build();
     }

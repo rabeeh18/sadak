@@ -63,7 +63,7 @@
     if (sel && document.activeElement !== sel) sel.value = String(Math.round(clock.speed));
     clockEl.toggleAttribute('data-paused', clock.paused);
     const toggle = clockEl.querySelector('[data-clock-toggle]');
-    if (!toggle) return; // production: real time, no controls
+    if (!toggle) return; // pages without the clock controls
     clockEl.querySelector('[data-icon-pause]').hidden = clock.paused;
     clockEl.querySelector('[data-icon-play]').hidden = !clock.paused;
     toggle.setAttribute('aria-label', clock.paused ? 'Resume simulation' : 'Pause simulation');

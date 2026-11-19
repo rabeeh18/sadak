@@ -130,9 +130,7 @@ bash "$REPO_DIR/deploy/wait-healthy.sh"
 cat <<EOF
 
 Sadak is up:  https://$DOMAIN
-  Demo:       https://$DOMAIN/demo  (one click, no password)
-  Demo users: admin@, dispatcher@, warehouse@, driver@sadak.example
-  Password:   $FLEET_DEMO_PASSWORD
+  The page opens on "Try the demo": one click per role, no password.
 
 The certificate can take a minute on the very first visit.
 After you push changes, put them live with:  sudo bash deploy/update.sh

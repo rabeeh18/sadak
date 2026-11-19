@@ -4,7 +4,7 @@ Read this first when picking the project up on a fresh machine. `README.md` cove
 
 ## Where things stand
 
-- All planned phases are built and working: control tower, tracking and simulation, planning, ETA and risk, incidents, fleet, driver app, public tracking, analytics, admin and audit.
+- All planned phases are built and working: control tower, tracking and simulation, planning, ETA and risk, incidents, fleet, driver app, warehouse desk, public tracking with customer help, analytics, and an audit trail. Demo-only: no Admin role or production mode.
 - Code packages are still named `com.fleetops`; only the product name changed to Sadak.
 - Demo data seeds itself on first start, and the demo keeps dispatching trips by itself.
 
@@ -24,12 +24,11 @@ Read this first when picking the project up on a fresh machine. `README.md` cove
 | Visual style | Toposheet, a Survey of India map sheet (see `DESIGN.md`). A minimal redesign was mocked up and declined for now; the user will raise it if that changes |
 | Stack | Java 21, Spring Boot 4.1, Thymeleaf, custom CSS, Leaflet, STOMP, PostgreSQL 17 |
 | Region | Punjab, India |
-| Customers | Public tracking page only, no accounts. The sign-in card has two tabs, Track a parcel (default) and Staff sign in; the demo role picker is its own page, `/demo`. The tracking page has no staff sign-in link |
+| Customers | Public tracking page only, no accounts. The tracking page has no sign-in link |
 | Customer help | On the tracking page: a note for the driver (shown at the stop), the parcel's warehouse desk phone and hours, and Report a problem. Complaints go to that warehouse's desk first and notify dispatchers; the desk's reply shows on the tracking page. No chatbot |
-| Roles | Admin, Dispatcher (whole fleet, control room), Warehouse (one warehouse: its desk page, shipments, booking, complaints), Driver |
+| Roles | Dispatcher (whole fleet, control room), Warehouse (one warehouse: its desk page, shipments, booking, complaints), Driver |
 | Problems and incidents | Each trip has a light: On track, Watch (heads-up), Needs action. Every Needs-action problem is an incident: Will be late, Off route, GPS lost, Truck stuck, Hasn't left yet, Breakdown. Incidents go Open → Being handled → Closed (or "Fixed itself"); each has one main fix. Points remain only as the explanation. Failed deliveries are not incidents (the warehouse desk rebooks them) |
-| Staff accounts | Sign in by email. Invite-only: admin invites with a role, the person sets their own password from a one-time link. Sadak sends no email: admins pass invite and reset links on themselves; there is no self-service password reset. First admin from `FLEET_ADMIN_*` |
-| Modes | Demo stays (needed for showing the project) and is the default; production mode (`-Production` / `prod` profile) is for deployment |
+| Sign-in | Demo only. The sign-in card has two tabs: Try the demo (default: Dispatcher, Warehouse, and a Driver picked by name) and Track a parcel. No Admin role, no email sign-in, invites or production mode (all removed on request). "Reset the demo" sits under the roles |
 | Project type | College project (Java subject) and portfolio; meant to be deployed |
 
 ## Open items

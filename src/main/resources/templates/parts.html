@@ -52,12 +52,6 @@
   <a href="/fleet/maintenance" th:attr="aria-current=${tab == 'maintenance'} ? 'page' : null">Workshop log</a>
 </nav>
 
-<nav th:fragment="adminTabs(tab)" class="tabs" style="margin-bottom:16px" aria-label="Admin sections">
-  <a href="/admin/settings" th:attr="aria-current=${tab == 'settings'} ? 'page' : null">Problems &amp; settings</a>
-  <a href="/admin/users" th:attr="aria-current=${tab == 'users'} ? 'page' : null">Users</a>
-  <a href="/admin/audit" th:attr="aria-current=${tab == 'audit'} ? 'page' : null">Audit log</a>
-</nav>
-
 <table th:fragment="tripTable(trips)" class="data">
   <thead><tr><th>Trip</th><th>Status</th><th>Planned</th><th class="r">Stops</th><th>Risk</th></tr></thead>
   <tbody>

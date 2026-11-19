@@ -19,7 +19,7 @@
     </h1>
     <p class="muted" th:switch="${status}">
       <th:block th:case="404">The link may be old, or the record was removed.</th:block>
-      <th:block th:case="403">Sign in with an account that has the right role, or ask an admin.</th:block>
+      <th:block th:case="403">This page belongs to a different role. Go back to the sign-in page and pick the right one.</th:block>
       <th:block th:case="*">The error has been logged. Go back and try again.</th:block>
     </p>
     <div class="btn-row" style="margin-top:16px"><a class="btn btn-primary" href="/">Go to the start</a><a class="btn" href="/login">Sign in</a></div>

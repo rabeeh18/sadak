@@ -35,17 +35,17 @@ class AccessControlIT extends IntegrationTestSupport {
     }
 
     @Test
-    void driversCannotOpenDispatchOrAdminScreens() throws Exception {
+    void driversCannotOpenDispatchScreens() throws Exception {
         mvc.perform(get("/tower").with(user("d").roles("DRIVER"))).andExpect(status().isForbidden());
-        mvc.perform(get("/admin/settings").with(user("d").roles("DRIVER"))).andExpect(status().isForbidden());
+        mvc.perform(get("/incidents").with(user("d").roles("DRIVER"))).andExpect(status().isForbidden());
         mvc.perform(post("/api/sim/pause").with(user("d").roles("DRIVER")).with(csrf())).andExpect(status().isForbidden());
     }
 
     @Test
-    void dispatchersCannotChangeAdminSettings() throws Exception {
-        mvc.perform(get("/admin/settings").with(user("x").roles("DISPATCHER"))).andExpect(status().isForbidden());
-        mvc.perform(post("/admin/rules/BREAKDOWN").param("points", "0").with(user("x").roles("DISPATCHER")).with(csrf()))
-            .andExpect(status().isForbidden());
+    void warehouseStaffCannotOpenTheControlRoom() throws Exception {
+        mvc.perform(get("/tower").with(user("w").roles("WAREHOUSE"))).andExpect(status().isForbidden());
+        mvc.perform(get("/planning").with(user("w").roles("WAREHOUSE"))).andExpect(status().isForbidden());
+        mvc.perform(get("/driver").with(user("w").roles("WAREHOUSE"))).andExpect(status().isForbidden());
     }
 
     @Test
@@ -81,18 +81,19 @@ class AccessControlIT extends IntegrationTestSupport {
     @Test
     void simulationControlsDoNotExistOutsideDemoMode() throws Exception {
         mvc.perform(post("/api/sim/pause").with(user("x").roles("DISPATCHER")).with(csrf())).andExpect(status().isNotFound());
-        mvc.perform(post("/demo-login").param("as", "admin").with(csrf())).andExpect(status().isNotFound());
-        mvc.perform(get("/demo")).andExpect(status().isNotFound());
+        mvc.perform(post("/demo-login").param("as", "dispatcher").with(csrf())).andExpect(status().isNotFound());
+        mvc.perform(post("/demo-reset").with(csrf())).andExpect(status().isNotFound());
         mvc.perform(get("/login")).andExpect(status().isOk())
-            .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("href=\"/demo\""))));
+            .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Try the demo"))));
     }
 
     @Test
-    void signInPageOpensOnTrackingUnlessStaffIsAsked() throws Exception {
+    void withoutTheDemoTheSignInPageOffersTrackingOnly() throws Exception {
         mvc.perform(get("/login")).andExpect(status().isOk())
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"pane-staff\" role=\"tabpanel\" aria-labelledby=\"tab-staff\" hidden")));
-        mvc.perform(get("/login").param("staff", "")).andExpect(status().isOk())
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"pane-track\" role=\"tabpanel\" aria-labelledby=\"tab-track\" hidden")));
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"pane-track\"")))
+            .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("pane-staff"))));
+        // Anyone not signed in is sent to the sign-in page.
+        mvc.perform(get("/tower")).andExpect(status().is3xxRedirection());
     }
 
     @Test

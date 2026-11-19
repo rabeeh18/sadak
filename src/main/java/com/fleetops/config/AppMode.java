@@ -5,8 +5,8 @@ import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Component;
 
 /**
- * Demo or production. Demo (the default profile) seeds synthetic Punjab data, runs the simulator and
- * lets the clock run fast. Production ({@code prod}) starts empty, runs on real time and has no shortcuts.
+ * Sadak always runs as the demo (the default profile): synthetic Punjab data, the simulator and a
+ * clock that can run fast. Only the automated tests run without it, on real time and with no seeding.
  */
 @Component
 public class AppMode {

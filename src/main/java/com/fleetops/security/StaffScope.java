@@ -20,7 +20,7 @@ public class StaffScope {
 
     /** The warehouse the current user is limited to, or null when they see every warehouse. */
     public Long warehouse() {
-        if (!CurrentUser.hasRole(Role.WAREHOUSE) || CurrentUser.hasRole(Role.DISPATCHER) || CurrentUser.hasRole(Role.ADMIN)) {
+        if (!CurrentUser.hasRole(Role.WAREHOUSE) || CurrentUser.hasRole(Role.DISPATCHER)) {
             return null;
         }
         Long id = users.findByUsername(CurrentUser.username()).map(UserAccount::getWarehouseId).orElse(null);

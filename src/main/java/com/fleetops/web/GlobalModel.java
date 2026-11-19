@@ -28,7 +28,7 @@ public class GlobalModel {
     private final ComplaintRepository complaints;
 
     /** For pages seen by someone without an account record: every flag the header reads is false. */
-    private static final Map<String, Object> NOBODY = Map.of("username", "", "name", "", "role", "", "admin", false,
+    private static final Map<String, Object> NOBODY = Map.of("username", "", "name", "", "role", "",
         "dispatcher", false, "warehouse", false, "warehouseName", "");
 
     public GlobalModel(UserAccountRepository users, IncidentRepository incidents, OperationalClock clock, AppMode mode,
@@ -53,7 +53,7 @@ public class GlobalModel {
             return NOBODY;
         }
         return users.findByUsername(auth.getName()).<Map<String, Object>>map(u -> {
-            boolean dispatcher = u.hasRole(Role.DISPATCHER) || u.hasRole(Role.ADMIN);
+            boolean dispatcher = u.hasRole(Role.DISPATCHER);
             boolean desk = !dispatcher && u.hasRole(Role.WAREHOUSE);
             String warehouseName = desk && u.getWarehouseId() != null
                 ? warehouses.findById(u.getWarehouseId()).map(Warehouse::getName).orElse("") : "";
@@ -61,7 +61,6 @@ public class GlobalModel {
                 "username", u.getUsername(),
                 "name", u.getFullName(),
                 "role", u.primaryRole().label(),
-                "admin", u.hasRole(Role.ADMIN),
                 "dispatcher", dispatcher,
                 "warehouse", desk,
                 "warehouseName", warehouseName);

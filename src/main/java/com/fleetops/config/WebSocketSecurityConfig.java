@@ -22,7 +22,7 @@ public class WebSocketSecurityConfig {
         return messages
             .simpTypeMatchers(SimpMessageType.CONNECT, SimpMessageType.DISCONNECT, SimpMessageType.HEARTBEAT,
                 SimpMessageType.UNSUBSCRIBE).authenticated()
-            .simpSubscribeDestMatchers("/topic/fleet/**").hasAnyRole("ADMIN", "DISPATCHER")
+            .simpSubscribeDestMatchers("/topic/fleet/**").hasRole("DISPATCHER")
             .simpSubscribeDestMatchers("/user/queue/**").authenticated()
             .simpDestMatchers("/app/**").denyAll()
             .anyMessage().denyAll()

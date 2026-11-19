@@ -203,7 +203,7 @@ public class IncidentService {
 
     private void notifyDispatchers(Incident i, String prefix) {
         String tripCode = i.getTrip() != null ? i.getTrip().getCode() : "";
-        notifications.notifyRoles(List.of(Role.DISPATCHER, Role.ADMIN), i.getSeverity(),
+        notifications.notifyRoles(List.of(Role.DISPATCHER), i.getSeverity(),
             prefix + i.getType().label() + " · " + tripCode, i.getTitle(), "/incidents/" + i.getId());
     }
 

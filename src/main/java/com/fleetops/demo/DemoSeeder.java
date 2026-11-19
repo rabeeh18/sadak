@@ -142,7 +142,6 @@ public class DemoSeeder {
     private Map<String, Warehouse> seedReference() {
         String password = demoPassword == null || demoPassword.isBlank() ? generatedPassword() : demoPassword;
         String hash = encoder.encode(password);
-        users.save(new UserAccount("admin", "admin@sadak.example", hash, "Asha Mehra", EnumSet.of(Role.ADMIN, Role.DISPATCHER)));
         users.save(new UserAccount("dispatcher", "dispatcher@sadak.example", hash, "Simran Kaur", EnumSet.of(Role.DISPATCHER)));
         users.save(new UserAccount("dispatcher2", "dispatcher2@sadak.example", hash, "Vikram Bedi", EnumSet.of(Role.DISPATCHER)));
         UserAccount driverUser = users.save(new UserAccount(DEMO_DRIVER_USERNAME, DEMO_DRIVER_USERNAME + "@sadak.example", hash, "Gurpreet Singh", EnumSet.of(Role.DRIVER)));

@@ -34,3 +34,9 @@
     if (selected) remember(selected.dataset.tab);
   }
 })();
+
+// Ask before forms that throw things away (the demo reset).
+document.addEventListener('submit', e => {
+  const msg = e.target.dataset && e.target.dataset.confirm;
+  if (msg && !confirm(msg)) e.preventDefault();
+});

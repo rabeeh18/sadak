@@ -1,8 +1,7 @@
 package com.fleetops.security;
 
-/** Application roles. Ids match the rows inserted into {@code roles} by V1. */
+/** Application roles. Ids match the rows in {@code roles} (V1; Admin, id 1, was removed in V7). */
 public enum Role {
-    ADMIN(1, "Admin"),
     DISPATCHER(2, "Dispatcher"),
     DRIVER(3, "Driver"),
     WAREHOUSE(4, "Warehouse");

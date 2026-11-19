@@ -3,7 +3,7 @@
 <head th:replace="~{layout :: head('Sign in')}"></head>
 <body class="login-body">
 <main class="login">
-  <section class="login-sheet" th:with="staff=${tab == 'staff'}, demo=${tab == 'demo'}, track=${tab == 'track'}">
+  <section class="login-sheet" th:with="demo=${tab == 'demo'}, track=${tab == 'track'}">
     <div class="login-collar">
       <span class="mark-p4" style="--s:52px" lang="pa" aria-hidden="true">ਸ<span>ੜ</span>ਕ</span>
       <div>
@@ -12,35 +12,58 @@
       </div>
     </div>
 
-    <div class="flash flash-error" role="alert" th:if="${param.error}">That email and password did not match. Try again.</div>
     <div class="flash flash-ok" role="status" th:if="${param.signedOut}">You have signed out.</div>
-    <div class="flash flash-ok" role="status" th:if="${param.passwordSet}">Password saved. Sign in with your email.</div>
+    <div class="flash flash-ok" role="status" th:if="${resetDone}">The demo has started over: a fresh day with trucks on the road.</div>
 
     <!-- Links work without JavaScript; login.js switches in place and remembers the choice. -->
     <nav class="tabs login-tabs" role="tablist" aria-label="Sign-in options" data-login-tabs th:attr="data-fixed=${tabFixed} ? 'true' : null">
       <a th:if="${demoMode}" href="/login?demo" role="tab" id="tab-demo" aria-controls="pane-demo" data-tab="demo"
          th:attr="aria-selected=${demo}"><svg class="icon"><use href="/img/icons.svg#i-play"></use></svg>Try the demo</a>
-      <a href="/login" role="tab" id="tab-track" aria-controls="pane-track" data-tab="track"
+      <a href="/login?track" role="tab" id="tab-track" aria-controls="pane-track" data-tab="track"
          th:attr="aria-selected=${track}"><svg class="icon"><use href="/img/icons.svg#i-package"></use></svg>Track a parcel</a>
-      <a th:unless="${demoMode}" href="/login?staff" role="tab" id="tab-staff" aria-controls="pane-staff" data-tab="staff"
-         th:attr="aria-selected=${staff}"><svg class="icon"><use href="/img/icons.svg#i-user"></use></svg>Staff sign in</a>
     </nav>
 
-    <!-- Demo mode: one click into each role. -->
+    <!-- Demo: one click into each role; drivers are picked by name. -->
     <section th:if="${demoMode}" class="login-pane" id="pane-demo" role="tabpanel" aria-labelledby="tab-demo" th:hidden="${!demo}">
       <p class="muted small pane-lede">Pick who you want to be. Everything is synthetic data, and trucks keep driving and dispatching by themselves.</p>
-      <form method="post" action="/demo-login" class="demo-roles">
+      <div class="demo-roles">
+        <form method="post" action="/demo-login">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <button class="demo-role" name="as" value="dispatcher" type="submit"><svg class="icon"><use href="/img/icons.svg#i-map"></use></svg>
+            <strong>Dispatcher</strong><span class="small muted">The control tower: live trucks, problems and fixes.</span></button>
+        </form>
+        <form method="post" action="/demo-login">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <button class="demo-role" name="as" value="warehouse" type="submit"><svg class="icon"><use href="/img/icons.svg#i-warehouse"></use></svg>
+            <strong>Warehouse</strong><span class="small muted">The Patiala desk: departures, returns, customer complaints.</span></button>
+        </form>
+
+        <details class="demo-role demo-pick">
+          <summary><svg class="icon"><use href="/img/icons.svg#i-truck"></use></svg>
+            <strong>Driver</strong><span class="small muted">The phone screen. Pick which driver you are.</span>
+            <svg class="icon demo-pick-chevron" aria-hidden="true"><use href="/img/icons.svg#i-chevron-down"></use></svg></summary>
+          <form method="post" action="/demo-login" class="demo-drivers">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input type="hidden" name="as" value="driver">
+            <button th:each="d : ${demoDrivers}" class="demo-driver" type="submit" name="driverId" th:value="${d.driverId}">
+              <span class="demo-driver-who"><strong th:text="${d.name}">Gurpreet Singh</strong>
+                <span class="small muted" th:text="${d.city} + (${d.tripCode != null} ? ' · ' + ${d.tripCode} : '')">Ludhiana · TR-1503</span></span>
+              <span class="demo-driver-trip">
+                <span class="plate" th:if="${d.plate != null}" th:text="${d.plate}">PB 10 DK 4237</span>
+                <span class="tag" th:classappend="${d.manual} ? 'tag-blue' : 'tag-ink'" th:text="${d.manual} ? 'You drive it' : ${d.when}">On the road</span>
+              </span>
+            </button>
+            <p th:if="${demoDrivers == null or demoDrivers.isEmpty()}" class="small muted" style="margin:6px 0 0">No driver has a trip right now.</p>
+            <p class="small muted demo-pick-note">Gurpreet's trip waits for you at every stop. The others drive and deliver by themselves, and you can record their stops too.</p>
+          </form>
+        </details>
+      </div>
+
+      <form method="post" action="/demo-reset" class="demo-reset-link"
+            data-confirm="Start the demo over? Everything that happened (trips, incidents, complaints) is replaced by a fresh day. Takes about 15 seconds.">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <button class="demo-role" name="as" value="dispatcher" type="submit"><svg class="icon"><use href="/img/icons.svg#i-map"></use></svg>
-          <strong>Dispatcher</strong><span class="small muted">The control tower: live trucks, problems and fixes.</span></button>
-        <button class="demo-role" name="as" value="warehouse" type="submit"><svg class="icon"><use href="/img/icons.svg#i-warehouse"></use></svg>
-          <strong>Warehouse</strong><span class="small muted">The Patiala desk: departures, returns, customer complaints.</span></button>
-        <button class="demo-role" name="as" value="driver" type="submit"><svg class="icon"><use href="/img/icons.svg#i-truck"></use></svg>
-          <strong>Driver</strong><span class="small muted">The phone screen: start a trip, record deliveries.</span></button>
-        <button class="demo-role" name="as" value="admin" type="submit"><svg class="icon"><use href="/img/icons.svg#i-shield"></use></svg>
-          <strong>Admin</strong><span class="small muted">Everything, plus users, rules and the audit log.</span></button>
+        <button type="submit" class="linklike small"><svg class="icon"><use href="/img/icons.svg#i-refresh-cw"></use></svg>Reset the demo</button>
       </form>
-      <p class="small muted pane-foot">Have an account? <a href="/login?staff">Sign in with email</a></p>
     </section>
 
     <section class="login-pane" id="pane-track" role="tabpanel" aria-labelledby="tab-track" th:hidden="${!track}">
@@ -58,26 +81,7 @@
         <button class="btn btn-blue btn-block" type="submit"><svg class="icon"><use href="/img/icons.svg#i-package"></use></svg>Track parcel</button>
       </form>
     </section>
-
-    <section class="login-pane" id="pane-staff" role="tabpanel" aria-labelledby="tab-staff" th:hidden="${!staff}">
-      <p class="muted small pane-lede">For dispatchers, drivers and admins. You'll go straight to your own screen.</p>
-      <form method="post" action="/login">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <div class="field">
-          <label for="email">Email</label>
-          <input id="email" name="email" type="email" autocomplete="username" required th:value="${prefillEmail}">
-        </div>
-        <div class="field">
-          <label for="password">Password</label>
-          <input id="password" name="password" type="password" autocomplete="current-password" required>
-        </div>
-        <button class="btn btn-primary btn-block" type="submit">Sign in</button>
-        <p class="small muted pane-foot">Forgot your password? Ask your admin for a reset link.</p>
-        <p class="small pane-foot" th:if="${demoMode}"><a href="/login?demo">Back to the demo</a></p>
-      </form>
-    </section>
   </section>
-
 </main>
 <script src="/js/login.js"></script>
 </body>

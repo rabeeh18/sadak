@@ -71,13 +71,6 @@ public class UserAccount {
         this.passwordSetAt = createdAt;
     }
 
-    /** An invited account: it cannot sign in until the person sets a password from their invite link. */
-    public static UserAccount invited(String username, String email, String unusablePasswordHash, String fullName, Role role) {
-        UserAccount u = new UserAccount(username, email, unusablePasswordHash, fullName, EnumSet.of(role));
-        u.passwordSetAt = null;
-        return u;
-    }
-
     public static String normaliseEmail(String email) {
         return email == null ? null : email.trim().toLowerCase(java.util.Locale.ROOT);
     }
@@ -98,19 +91,9 @@ public class UserAccount {
         return passwordSetAt;
     }
 
-    public boolean isInvitePending() {
-        return passwordSetAt == null;
-    }
-
-    /** Sets a new password chosen by the person themselves (invite acceptance or reset). */
-    public void choosePassword(String newHash, Instant at) {
-        this.passwordHash = newHash;
-        this.passwordSetAt = at;
-    }
-
-    /** The role shown in the interface: the most powerful one held. */
+    /** The role shown in the interface. */
     public Role primaryRole() {
-        return roles.contains(Role.ADMIN) ? Role.ADMIN : roles.contains(Role.DISPATCHER) ? Role.DISPATCHER
+        return roles.contains(Role.DISPATCHER) ? Role.DISPATCHER
             : roles.contains(Role.WAREHOUSE) ? Role.WAREHOUSE : Role.DRIVER;
     }
 

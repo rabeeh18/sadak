@@ -157,7 +157,7 @@ public class DeskController {
         if (waiting.isEmpty()) {
             throw new BusinessRuleException("Nothing is waiting to go out");
         }
-        notifications.notifyRoles(List.of(Role.DISPATCHER, Role.ADMIN), RiskBand.MEDIUM,
+        notifications.notifyRoles(List.of(Role.DISPATCHER), RiskBand.MEDIUM,
             w.getName() + " asks for planning", waiting.size() + " parcel" + (waiting.size() == 1 ? "" : "s") + " waiting, the first due "
                 + fmt.when(waiting.get(0).getDeadline()), "/planning");
         ra.addFlashAttribute("ok", "Dispatch has been asked to plan the waiting parcels.");

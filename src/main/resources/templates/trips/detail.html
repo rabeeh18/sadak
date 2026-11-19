@@ -130,7 +130,7 @@
             <li th:each="line : ${@fmt.reasonLines(trip.riskReasons)}"><span class="pts" th:classappend="'band-' + ${trip.riskBand.name()}" th:text="${line[0]}">+0</span><span class="why" th:text="${line[1]}">x</span></li>
           </ul>
           <p class="muted small" th:if="${(live != null and live.reasons.isEmpty()) or (live == null and trip.riskScore == 0)}" style="margin:0">Nothing wrong.</p>
-          <p class="small muted" style="margin:12px 0 0">Red problems need action and open an incident; yellow ones are heads-ups. The points show how much each adds; admins tune them under <a href="/admin/settings">What counts as a problem</a>.</p>
+          <p class="small muted" style="margin:12px 0 0">Red problems need action and open an incident; yellow ones are heads-ups. The points show how much each one adds.</p>
         </div>
       </section>
 

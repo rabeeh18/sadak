@@ -59,16 +59,15 @@ That address works straight away with HTTPS: `sslip.io` is a free service that t
 | Task | Command (on the server, in `~/sadak`) |
 |---|---|
 | Put new changes live (after `git push` on your laptop) | `sudo bash deploy/update.sh` |
-| Start the demo over with fresh data | Admin → Problems & settings → **Reset demo data** (in the app), or `sudo bash deploy/reset-demo.sh` |
+| Start the demo over with fresh data | **Reset the demo** under the roles on the sign-in page, or `sudo bash deploy/reset-demo.sh` |
 | Is it running? | `systemctl status sadak` |
 | See the log | `journalctl -u sadak -f` |
 | Restart | `sudo systemctl restart sadak` |
 
-The settings and passwords are in `/etc/sadak/sadak.env` (readable by root only). The demo password for signing in by email is the `FLEET_DEMO_PASSWORD` line there.
+The settings and database password are in `/etc/sadak/sadak.env` (readable by root only).
 
 ## Good to know
 
 - **It keeps running.** Sadak restarts by itself if it crashes or the server reboots. The demo also keeps dispatching trips by itself, so it never runs dry.
 - **Cost.** A t3.small in Mumbai is roughly $15–18 a month while running; t3.micro is free for the first year on a new account. Stop the instance in the console when nobody needs it: the Elastic IP keeps its address (AWS charges a little for it while the instance is stopped).
 - **Memory.** Sadak uses about 400 MB and PostgreSQL about 100 MB. The setup adds 2 GB of swap so building on a small instance doesn't run out of memory.
-- **Production mode** (a real, empty company instead of the demo) is described in the README. It needs `SPRING_PROFILES_ACTIVE=prod` and the `FLEET_ADMIN_*` settings added to `/etc/sadak/sadak.env`, then `sudo systemctl restart sadak`.

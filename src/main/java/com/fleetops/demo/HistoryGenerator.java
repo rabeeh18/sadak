@@ -72,7 +72,7 @@ public class HistoryGenerator {
             (rs, i) -> new Res(rs.getLong(1), rs.getLong(2), rs.getString(3))).stream().collect(Collectors.groupingBy(Res::warehouseId));
         Map<Long, List<Res>> driversByWh = jdbc.query("select d.id, d.home_warehouse_id, w.code from drivers d join warehouses w on w.id = d.home_warehouse_id where d.license_expiry > current_date - 400",
             (rs, i) -> new Res(rs.getLong(1), rs.getLong(2), rs.getString(3))).stream().collect(Collectors.groupingBy(Res::warehouseId));
-        List<String> dispatchers = List.of("dispatcher", "dispatcher2", "admin");
+        List<String> dispatchers = List.of("dispatcher", "dispatcher2");
 
         // Estimate the volume first so ids can be reserved from the sequences in bulk.
         int estTrips = days * warehouses.size() * 4 + 50;
@@ -255,7 +255,7 @@ public class HistoryGenerator {
                 for (int back = days - random.nextInt(14); back > 2; back -= 18 + random.nextInt(10)) {
                     Instant start = today.minusDays(back).atTime(18, 30).atZone(zone).toInstant();
                     maintenanceRows.add(new Object[] {v.id(), "SCHEDULED", "Scheduled service", ts(start),
-                        ts(start.plus(Duration.ofHours(5 + random.nextInt(8)))), "admin"});
+                        ts(start.plus(Duration.ofHours(5 + random.nextInt(8)))), "dispatcher"});
                 }
             }
         }

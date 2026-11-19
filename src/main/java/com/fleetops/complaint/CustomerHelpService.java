@@ -30,7 +30,7 @@ public class CustomerHelpService {
     /** Complaints about a delivered parcel are accepted for this long afterwards. */
     public static final Duration AFTER_DELIVERY = Duration.ofDays(7);
 
-    private static final List<Role> CONTROL_ROOM = List.of(Role.DISPATCHER, Role.ADMIN);
+    private static final List<Role> CONTROL_ROOM = List.of(Role.DISPATCHER);
 
     private final ShipmentRepository shipments;
     private final ComplaintRepository complaints;
