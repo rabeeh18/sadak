@@ -55,13 +55,13 @@
             <tbody>
               <tr th:each="t : ${departures}">
                 <td><strong th:text="${t.code}">TR</strong>
-                  <span class="sub" th:text="${t.actualStart != null} ? 'left ' + ${@fmt.time(t.actualStart)} : 'leaves ' + ${@fmt.time(t.plannedStart)}">t</span></td>
+                  <span class="sub" th:text="${t.actualStart != null} ? 'left ' + ${@fmt.time(t.actualStart)} : 'not left yet'">t</span></td>
                 <td><span th:text="${t.vehicle.registration}">PB</span><span class="sub" th:text="${t.driver.fullName}">driver</span></td>
                 <td class="num"><span th:text="${t.completedStopCount()} + ' of ' + ${t.stops.size()} + ' done'">x</span>
                   <div class="progress" style="height:5px;width:110px;margin-top:4px"><i th:style="'width:' + ${t.progressPercent()} + '%'"></i></div></td>
                 <td>
                   <span th:if="${t.status.name() == 'COMPLETED'}" class="tag tag-ink" th:text="'Back ' + ${@fmt.time(t.actualEnd)}">back</span>
-                  <span th:if="${t.status.name() == 'PLANNED'}" class="tag tag-blue">Loading</span>
+                  <th:block th:if="${t.status.name() == 'PLANNED'}"><span th:if="${t.riskBand == null or t.riskBand.name() == 'LOW'}" class="tag tag-blue" th:text="'Leaves ' + ${@fmt.time(t.plannedStart)}">Leaves</span><th:block th:unless="${t.riskBand == null or t.riskBand.name() == 'LOW'}"><span th:replace="~{parts :: spot(${t.riskScore}, ${t.riskBand.name()})}"></span></th:block></th:block>
                   <th:block th:if="${t.status.name() == 'IN_PROGRESS'}"><span th:replace="~{parts :: spot(${t.riskScore}, ${t.riskBand == null ? 'LOW' : t.riskBand.name()})}"></span></th:block>
                 </td>
               </tr>
