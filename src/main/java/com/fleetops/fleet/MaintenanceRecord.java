@@ -19,7 +19,7 @@ import jakarta.persistence.Table;
 @Table(name = "maintenance_records")
 public class MaintenanceRecord {
 
-    public enum Kind { BREAKDOWN, SCHEDULED, INSPECTION }
+    public enum Kind { BREAKDOWN, SCHEDULED }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

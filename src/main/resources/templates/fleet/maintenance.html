@@ -4,7 +4,7 @@
 <body>
 <header th:replace="~{layout :: header('fleet')}"></header>
 <main class="page">
-  <div class="page-head"><div><h1>Fleet</h1><p class="sub">Breakdowns, services and inspections. Downtime feeds the analytics.</p></div></div>
+  <div class="page-head"><div><h1>Fleet</h1><p class="sub">Breakdowns and scheduled services. Downtime feeds the analytics.</p></div></div>
   <nav th:replace="~{parts :: fleetTabs(${tab})}"></nav>
   <th:block th:replace="~{layout :: flash}"></th:block>
   <section class="panel">
