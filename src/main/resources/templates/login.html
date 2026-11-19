@@ -32,11 +32,24 @@
           <button class="demo-role" name="as" value="dispatcher" type="submit"><svg class="icon"><use href="/img/icons.svg#i-map"></use></svg>
             <strong>Dispatcher</strong><span class="small muted">The control tower: live trucks, problems and fixes.</span></button>
         </form>
-        <form method="post" action="/demo-login">
-          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-          <button class="demo-role" name="as" value="warehouse" type="submit"><svg class="icon"><use href="/img/icons.svg#i-warehouse"></use></svg>
-            <strong>Warehouse</strong><span class="small muted">The Patiala desk: departures, returns, customer complaints.</span></button>
-        </form>
+        <details class="demo-role demo-pick">
+          <summary><svg class="icon"><use href="/img/icons.svg#i-warehouse"></use></svg>
+            <strong>Warehouse</strong><span class="small muted">A warehouse desk: departures, returns, complaints. Pick which one.</span>
+            <svg class="icon demo-pick-chevron" aria-hidden="true"><use href="/img/icons.svg#i-chevron-down"></use></svg></summary>
+          <form method="post" action="/demo-login" class="demo-drivers">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input type="hidden" name="as" value="warehouse">
+            <button th:each="w : ${demoWarehouses}" class="demo-driver" type="submit" name="warehouseId" th:value="${w.warehouseId}">
+              <span class="demo-driver-who"><strong th:text="${w.name}">Patiala Depot</strong>
+                <span class="small muted" th:text="${w.trucksOut} + (${w.trucksOut == 1} ? ' truck' : ' trucks') + ' on the road'">2 trucks on the road</span></span>
+              <span class="demo-driver-trip">
+                <span class="tag tag-red" th:if="${w.openComplaints > 0}" th:text="${w.openComplaints} + (${w.openComplaints == 1} ? ' complaint' : ' complaints')">1 complaint</span>
+                <span class="grid-ref" th:text="${w.code}">PTA</span>
+              </span>
+            </button>
+            <p class="small muted demo-pick-note">Each desk sees only its own warehouse.</p>
+          </form>
+        </details>
 
         <details class="demo-role demo-pick">
           <summary><svg class="icon"><use href="/img/icons.svg#i-truck"></use></svg>

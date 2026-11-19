@@ -141,10 +141,8 @@ public class DemoDesk {
             if (out.isEmpty()) {
                 return;
             }
-            // Patiala gets a share of everything, so the demo desk user always has something.
-            List<Shipment> patiala = out.stream().filter(s -> s.getOriginWarehouse().getCode().equals("PTA")).toList();
-            List<Shipment> pool = !patiala.isEmpty() && random.nextBoolean() ? patiala : out;
-            Shipment s = pool.get(random.nextInt(pool.size()));
+            // Any warehouse: visitors can open every desk.
+            Shipment s = out.get(random.nextInt(out.size()));
             if (complaint) {
                 if (complaints.countByStatusNot(Complaint.Status.RESOLVED) >= 4) {
                     return;

@@ -1,5 +1,6 @@
 package com.fleetops.web;
 
+import java.util.List;
 import java.util.Set;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +25,7 @@ import com.fleetops.common.web.NotFoundException;
 import com.fleetops.config.AppMode;
 import com.fleetops.demo.DemoDrivers;
 import com.fleetops.demo.DemoReset;
+import com.fleetops.demo.DemoWarehouses;
 import com.fleetops.security.Role;
 import com.fleetops.security.SecurityConfig;
 import com.fleetops.security.UserAccount;
@@ -39,10 +41,12 @@ public class HomeController {
     private final UserAccountRepository users;
     private final ObjectProvider<DemoDrivers> demoDrivers;
     private final ObjectProvider<DemoReset> demoReset;
+    private final ObjectProvider<DemoWarehouses> demoWarehouses;
     private final SecurityContextRepository contextRepository = new HttpSessionSecurityContextRepository();
 
     public HomeController(AppMode mode, UserAccountRepository users, ObjectProvider<DemoDrivers> demoDrivers,
-                          ObjectProvider<DemoReset> demoReset) {
+                          ObjectProvider<DemoReset> demoReset, ObjectProvider<DemoWarehouses> demoWarehouses) {
+        this.demoWarehouses = demoWarehouses;
         this.mode = mode;
         this.users = users;
         this.demoDrivers = demoDrivers;
@@ -66,6 +70,8 @@ public class HomeController {
         model.addAttribute("tabFixed", demo != null || track != null);
         if (picker != null) {
             model.addAttribute("demoDrivers", picker.options());
+            DemoWarehouses desks = demoWarehouses.getIfAvailable();
+            model.addAttribute("demoWarehouses", desks == null ? List.of() : desks.options());
         }
         return "login";
     }
@@ -73,6 +79,7 @@ public class HomeController {
     /** Demo mode: one-click sign-in as the dispatcher, the Patiala warehouse desk, or any driver with a trip. */
     @PostMapping("/demo-login")
     public String demoLogin(@RequestParam("as") String as, @RequestParam(required = false) Long driverId,
+                            @RequestParam(required = false) Long warehouseId,
                             HttpServletRequest request, HttpServletResponse response) {
         DemoDrivers picker = demoDrivers.getIfAvailable();
         if (!mode.demo() || picker == null) {
@@ -86,6 +93,9 @@ public class HomeController {
             }
             // Loaded again by id: the account comes back from the picker's own transaction as a lazy reference.
             long accountId = picker.accountFor(id).getId();
+            account = users.findById(accountId).orElseThrow(() -> new NotFoundException("User", accountId));
+        } else if (as.equals("warehouse") && warehouseId != null && demoWarehouses.getIfAvailable() != null) {
+            long accountId = demoWarehouses.getIfAvailable().accountFor(warehouseId);
             account = users.findById(accountId).orElseThrow(() -> new NotFoundException("User", accountId));
         } else if (DEMO_USERS.contains(as)) {
             account = users.findByUsername(as).orElseThrow(() -> new NotFoundException("User", as));

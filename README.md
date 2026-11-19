@@ -26,7 +26,7 @@ Credentials live in `.env.local` (gitignored): database user, superuser, and the
 powershell -ExecutionPolicy Bypass -File scripts/run.ps1
 ```
 
-This checks that the PostgreSQL service is running, then starts the app on <http://localhost:8080>. The first start migrates the schema and seeds the demo (about 15 seconds). Sadak is a demo: the sign-in page opens on **Try the demo**, where one click signs you in as the Dispatcher, the Patiala warehouse desk, or any driver who has a trip (pick them by name). The other tab is **Track a parcel**. **Reset the demo**, under the roles, starts a fresh day.
+This checks that the PostgreSQL service is running, then starts the app on <http://localhost:8080>. The first start migrates the schema and seeds the demo (about 15 seconds). Sadak is a demo: the sign-in page opens on **Try the demo**, where one click signs you in as the Dispatcher, any of the six warehouse desks, or any driver who has a trip (pick them by name). The other tab is **Track a parcel**. **Reset the demo**, under the roles, starts a fresh day.
 
 ### What the demo runs on
 
@@ -60,7 +60,7 @@ Memory while running: about 320 MB for the app and 85 MB for PostgreSQL.
 4. **Fix it**, right in the panel or on the Incidents board. Each incident has one main button: *Give customer a new time* (Will be late), *Call the driver* (Off route, GPS lost, Truck stuck, Hasn't left yet) or *Send replacement truck* (Breakdown, using the recommended vehicle). "I'm on it" marks it as being handled; other actions are under "More". The new route first goes to the breakdown site to collect the cargo, then continues. Completed stops are untouched.
 5. **Driver view.** Open Driver on the demo tab and pick a driver (or open it on a phone). Gurpreet Singh's trip is driven by hand: start it, confirm arrivals, record deliveries with the recipient's name, or report a failed delivery. The other drivers' trucks drive and deliver by themselves; you can record their stops too.
 6. **Public tracking.** `/track`: tracking number + delivery PIN code shows status against the promised time, progress, and a map of the road still to go (with a gap around the truck, whose position is only approximate). The customer can leave the driver a note, call the warehouse desk, or report a problem and follow its progress.
-7. **Warehouse desk.** Pick Warehouse on the demo tab: the Patiala desk sees only Patiala: today's departures, parcels waiting and coming back, customer notes, and complaints to call back, answer and resolve (the reply shows on the customer's tracking page). Demo customers write in now and then.
+7. **Warehouse desk.** Open Warehouse on the demo tab and pick a warehouse. Each desk sees only its own warehouse: today's departures, parcels waiting and coming back, customer notes, and complaints to call back, answer and resolve (the reply shows on the customer's tracking page). Demo customers write in now and then.
 8. **Analytics.** Eight weeks of seeded history: on-time rate, delays, utilisation, downtime, incident resolution time, route efficiency, plus *where the plan runs slow*. Moga and Gurdaspur legs are seeded to run late, and the town table finds them. Click a day to see its trips; export CSV.
 
 The demo keeps itself running. During the simulated working day, each warehouse books shipments and dispatches trips as vehicles come free. About one trip in four is promised tightly, so the risk engine has something to find. Broken-down vehicles return from the workshop after a few hours, and quiet nights are skipped to the next morning.

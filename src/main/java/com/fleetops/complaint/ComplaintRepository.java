@@ -29,6 +29,8 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 
     long countByStatusNot(Complaint.Status status);
 
+    long countByWarehouseIdAndStatusNot(Long warehouseId, Complaint.Status status);
+
     @Query(value = "select nextval('complaint_code_seq')", nativeQuery = true)
     long nextCode();
 }

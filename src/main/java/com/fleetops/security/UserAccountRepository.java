@@ -10,6 +10,9 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
 
     Optional<UserAccount> findByUsername(String username);
 
+    /** The first account working at a warehouse (Warehouse role). */
+    Optional<UserAccount> findFirstByWarehouseIdOrderByIdAsc(Long warehouseId);
+
     boolean existsByUsername(String username);
 
     /** Emails are stored lower-case, so callers pass {@link UserAccount#normaliseEmail(String)}. */

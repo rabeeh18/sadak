@@ -28,7 +28,7 @@ Read this first when picking the project up on a fresh machine. `README.md` cove
 | Customer help | On the tracking page: a note for the driver (shown at the stop), the parcel's warehouse desk phone and hours, and Report a problem. Complaints go to that warehouse's desk first and notify dispatchers; the desk's reply shows on the tracking page. No chatbot |
 | Roles | Dispatcher (whole fleet, control room), Warehouse (one warehouse: its desk page, shipments, booking, complaints), Driver |
 | Problems and incidents | Each trip has a light: On track, Watch (heads-up), Needs action. Every Needs-action problem is an incident: Will be late, Off route, GPS lost, Truck stuck, Hasn't left yet, Breakdown. Incidents go Open → Being handled → Closed (or "Fixed itself"); each has one main fix. Points remain only as the explanation. Failed deliveries are not incidents (the warehouse desk rebooks them) |
-| Sign-in | Demo only. The sign-in card has two tabs: Try the demo (default: Dispatcher, Warehouse, and a Driver picked by name) and Track a parcel. No Admin role, no email sign-in, invites or production mode (all removed on request). "Reset the demo" sits under the roles |
+| Sign-in | Demo only. The sign-in card has two tabs: Try the demo (default: Dispatcher, a Warehouse desk and a Driver, both picked by name) and Track a parcel. No Admin role, no email sign-in, invites or production mode (all removed on request). "Reset the demo" sits under the roles |
 | Project type | College project (Java subject) and portfolio; meant to be deployed |
 
 ## Open items
